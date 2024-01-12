@@ -12,6 +12,12 @@
   
   <depend>roscpp</depend>
   <depend>rospy</depend>
+  <depend>cv_bridge</depend>
+  <depend>image_transport</depend>
+  <depend>sensor_msgs</depend>
+  <depend>yaml-cpp</depend>
+  <depend>boost_plugin_loader</depend>
+  <depend>industrial_calibration</depend>
 
   <export>
     <!-- Other tools can request additional information be placed here -->

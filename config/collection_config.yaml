@@ -1,4 +1,5 @@
-image_topic: "/image_publisher_1702948963007019154/image_raw"
+data_collection/image_topic: "target_detector/image_raw"
+target_detector/image_sub_topic: "image_publisher_1705022070965483774/image_raw"
 base_frame: "base_link"
 tool_frame: "link_6"
 save_path: "/tmp/test_data"

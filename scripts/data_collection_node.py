@@ -77,11 +77,11 @@ class DataCollector:
         self.poses = []
         self.images = []
 
-        self.image_monitor = ImageMonitor(rospy.get_param("image_topic"))
+        self.image_monitor = ImageMonitor(rospy.get_param("data_collection/image_topic"))
         self.tf_monitor = TransformMonitor(rospy.get_param("base_frame"), rospy.get_param("tool_frame"))
 
-        self.collect_server = rospy.Service("collect", Trigger, self.collect_cb, 1)
-        self.save_server = rospy.Service("save", Trigger, self.save_cb, 1)
+        self.collect_server = rospy.Service("data_collection_node/collect", Trigger, self.collect_cb, 1)
+        self.save_server = rospy.Service("data_collection_node/save", Trigger, self.save_cb, 1)
 
     
     def collect_cb(self, req : TriggerRequest) -> TriggerResponse:

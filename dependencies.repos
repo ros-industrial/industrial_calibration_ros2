@@ -1,0 +1,5 @@
+repositories:
+  industrial_calibration:
+    type: git
+    url: git@github.com:ros-industrial/industrial_calibration.git
+    version: main

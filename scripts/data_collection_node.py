@@ -4,7 +4,6 @@ import numpy as np
 import yaml
 import cv2
 import os
-import copy
 
 import rospy
 from cv_bridge import CvBridge

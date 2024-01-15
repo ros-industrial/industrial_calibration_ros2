@@ -61,7 +61,7 @@ class ImageMonitor:
             rospy.logerr(ex)
 
     
-    def capture(self) -> np.ndarray: # # returns None if fails
+    def capture(self) -> np.ndarray: # returns None if fails
         if self.frame_acquired:
             return self.last_frame
         return None
@@ -116,7 +116,7 @@ class DataCollector:
             count = 0
             for img, pose in zip(self.images, self.poses):
                 cv2.imwrite(self.img_path + "/" + str(count).zfill(1) + ".png", img)
-                self.savePose(pose, count)
+                self.save_pose(pose, count)
                 count+=1
         
             rospy.loginfo(f"Saved data due to : {self.parent_path}")
@@ -128,7 +128,7 @@ class DataCollector:
             return res
             
     
-    def savePose(self, pose: TransformStamped, pose_num: int) -> None:
+    def save_pose(self, pose: TransformStamped, pose_num: int) -> None:
         # Convert TransformStamped message to a dictionary
         transform_dict = {
             'header': {

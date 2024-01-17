@@ -10,40 +10,45 @@ from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 from std_srvs.srv import Trigger, TriggerRequest, TriggerResponse
 from geometry_msgs.msg import TransformStamped
-from tf2_ros import TransformListener, Buffer
+from tf2_ros import TransformListener, Buffer, TransformException
 
 
-class TransformMonitor:
-    def __init__(self, base_frame : str, tool_frame : str):
-        self.base_frame = base_frame
-        self.tool_frame = tool_frame
+BASE_FRAME_PARAM = "data_collection/base_frame"
+TOOL_FRAME_PARAM = "data_collection/tool_frame"
+IMAGE_TOPIC_PARAM = "data_collection/image_topic"
+SAVE_PATH_PARAM = "data_collection/save_path"
+COLLECT_SRV = "data_collection/collect"
+SAVE_SRV = "data_collection/save"
 
+
+class DataCollector:
+    def __init__(self):
+        # Get params
+        self.parent_path = rospy.get_param(SAVE_PATH_PARAM)
+        self.base_frame = rospy.get_param(BASE_FRAME_PARAM)
+        self.tool_frame = rospy.get_param(TOOL_FRAME_PARAM)
+        self.img_topic = rospy.get_param(IMAGE_TOPIC_PARAM)
+
+        self.img_path = self.parent_path + "/image"
+        self.pose_path = self.parent_path + "/pose"
+
+        self.poses = []
+        self.images = []
+
+        # Set up tf listener
         self.buffer = Buffer()
         self.listener = TransformListener(self.buffer)
 
-        # Check transforms are available
-        if self.capture() is None:
-            raise RuntimeError(f"Transform from {self.base_frame} to {self.tool_frame} not available")
-
-
-    def capture(self) -> TransformStamped: # returns None if fails
-        try:
-            return self.buffer.lookup_transform(self.base_frame, self.tool_frame, rospy.Time(), rospy.Duration(3.0))
-        except Exception as ex:
-            rospy.logerr(f"Failed to compute transform between {self.base_frame}" +
-                         f"and {self.tool_frame} : {ex} ")
-            return None
-
-
-class ImageMonitor:
-    def __init__(self, img_topic : str):
+        # Set up image subscriber
         self.last_frame : np.ndarray
-        self.frame_acquired = False
         self.cvb = CvBridge()
+        self.img_sub = rospy.Subscriber(self.img_topic, Image, callback=self.img_cb)
 
-        self.img_sub = rospy.Subscriber(img_topic, Image, callback=self.img_cb)
+        # Set up servers
+        self.collect_server = rospy.Service(COLLECT_SRV, Trigger, self.collect_cb, 1)
+        self.save_server = rospy.Service(SAVE_SRV, Trigger, self.save_cb, 1)
 
-
+    
     def img_cb(self, img_msg : Image) -> None:
         try:
             # Save most recent Image
@@ -53,50 +58,36 @@ class ImageMonitor:
                 self.last_frame = img_conv
             else:
                 self.last_frame = self.cvb.imgmsg_to_cv2(img_msg, desired_encoding="bgr8")
-            
-            # Set flag for frame acquired
-            self.frame_acquired = True
 
         except Exception as ex:
             rospy.logerr(ex)
-
     
-    def capture(self) -> np.ndarray: # returns None if fails
-        if self.frame_acquired:
-            return self.last_frame
-        return None
-
-
-class DataCollector:
-    def __init__(self):
-        self.parent_path = rospy.get_param("save_path")
-        self.img_path = self.parent_path + "/image"
-        self.pose_path = self.parent_path + "/pose"
-
-        self.poses = []
-        self.images = []
-
-        self.image_monitor = ImageMonitor(rospy.get_param("data_collection/image_topic"))
-        self.tf_monitor = TransformMonitor(rospy.get_param("base_frame"), rospy.get_param("tool_frame"))
-
-        self.collect_server = rospy.Service("data_collection_node/collect", Trigger, self.collect_cb, 1)
-        self.save_server = rospy.Service("data_collection_node/save", Trigger, self.save_cb, 1)
-
     
     def collect_cb(self, req : TriggerRequest) -> TriggerResponse:
         res = TriggerResponse()
         rospy.loginfo("Image/TF capture triggered...")
-        pose = self.tf_monitor.capture()
-        img = self.image_monitor.capture()
-
-        if  pose is not None and img is not None:
+        try:
+            # Collect pose
+            pose = self.buffer.lookup_transform(self.base_frame, self.tool_frame, rospy.Time(), rospy.Duration(3.0))
             self.poses.append(pose)
+        except TransformException as ex:
+             rospy.logerr(f"Failed to compute transform between {self.base_frame}" +
+                          f"and {self.tool_frame} : {ex} ")
+             res.success = False
+             return res
+        
+        try:
+            # Collect image
+            img = self.last_frame
             self.images.append(img)
-            rospy.loginfo("Data collected successfully")
-            res.success = True
-        else:
-            rospy.logerr("Failed to capture pose/image pair")
+
+        except Exception as ex:
+            rospy.logerr(f"Failed to receive image from {self.img_topic} due to : {ex}")
             res.success = False
+            return res
+
+        rospy.loginfo("Data collected successfully")
+        res.success = True
         return res
 
     

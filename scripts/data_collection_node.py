@@ -1,36 +1,25 @@
 #!/usr/bin/env python3
 
-import numpy as np
-import yaml
-import cv2
-import os
-
-import rospy
 from cv_bridge import CvBridge
-from sensor_msgs.msg import Image
-from std_srvs.srv import Trigger, TriggerRequest, TriggerResponse
+import cv2
 from geometry_msgs.msg import TransformStamped
-from tf2_ros import TransformListener, Buffer, TransformException
-
-
-BASE_FRAME_PARAM = "data_collection/base_frame"
-TOOL_FRAME_PARAM = "data_collection/tool_frame"
-IMAGE_TOPIC_PARAM = "data_collection/image_topic"
-SAVE_PATH_PARAM = "data_collection/save_path"
-COLLECT_SRV = "data_collection/collect"
-SAVE_SRV = "data_collection/save"
+import os
+import rospy
+from sensor_msgs.msg import Image
+from std_srvs.srv import *
+from tf2_ros import TransformListener, Buffer
+import yaml
 
 
 class DataCollector:
     def __init__(self):
-        # Get params
-        self.parent_path = rospy.get_param(SAVE_PATH_PARAM)
-        self.base_frame = rospy.get_param(BASE_FRAME_PARAM)
-        self.tool_frame = rospy.get_param(TOOL_FRAME_PARAM)
-        self.img_topic = rospy.get_param(IMAGE_TOPIC_PARAM)
+        self.parent_path = rospy.get_param('~save_path')
+        self.base_frame = rospy.get_param('~base_frame')
+        self.tool_frame = rospy.get_param('~tool_frame')
+        self.sync_time = rospy.get_param('~sync_time', 1.0)
 
-        self.img_path = self.parent_path + "/image"
-        self.pose_path = self.parent_path + "/pose"
+        self.img_path = os.path.join(self.parent_path, 'images')
+        self.pose_path = os.path.join(self.parent_path, 'poses')
 
         self.poses = []
         self.images = []
@@ -40,114 +29,86 @@ class DataCollector:
         self.listener = TransformListener(self.buffer)
 
         # Set up image subscriber
-        self.last_frame : np.ndarray
+        self.last_frame : Image = None
         self.cvb = CvBridge()
-        self.img_sub = rospy.Subscriber(self.img_topic, Image, callback=self.img_cb)
+        self.img_sub = rospy.Subscriber('image', Image, callback=self.img_cb)
 
         # Set up servers
-        self.collect_server = rospy.Service(COLLECT_SRV, Trigger, self.collect_cb, 1)
-        self.save_server = rospy.Service(SAVE_SRV, Trigger, self.save_cb, 1)
+        self.collect_server = rospy.Service('collect', Trigger, self.collect_cb, 1)
+        self.save_server = rospy.Service('save', Trigger, self.save_cb, 1)
 
     
     def img_cb(self, img_msg : Image) -> None:
-        try:
-            # Save most recent Image
-            if img_msg.encoding == "mono16":
-                tmp : np.ndarray = self.cvb.imgmsg_to_cv2(img_msg, desired_encoding="mono16")
-                img_conv : np.ndarray = cv2.cvtColor(tmp, cv2.COLOR_BGR2GRAY)
-                self.last_frame = img_conv
-            else:
-                self.last_frame = self.cvb.imgmsg_to_cv2(img_msg, desired_encoding="bgr8")
-
-        except Exception as ex:
-            rospy.logerr(ex)
+        self.last_frame = img_msg
     
-    
-    def collect_cb(self, req : TriggerRequest) -> TriggerResponse:
+    def collect_cb(self, _req: TriggerRequest) -> TriggerResponse:
         res = TriggerResponse()
-        rospy.loginfo("Image/TF capture triggered...")
-        try:
-            # Collect pose
-            pose = self.buffer.lookup_transform(self.base_frame, self.tool_frame, rospy.Time(), rospy.Duration(3.0))
-            self.poses.append(pose)
-        except TransformException as ex:
-             rospy.logerr(f"Failed to compute transform between {self.base_frame}" +
-                          f"and {self.tool_frame} : {ex} ")
-             res.success = False
-             return res
-        
-        try:
-            # Collect image
-            img = self.last_frame
-            self.images.append(img)
+        rospy.loginfo("Collection triggered...")
 
-        except Exception as ex:
-            rospy.logerr(f"Failed to receive image from {self.img_topic} due to : {ex}")
+        try:
+            if self.last_frame is  None:
+                raise RuntimeError('No image acquired yet')
+            else:
+                diff = rospy.get_time() - self.last_frame.header.stamp.to_sec()
+                if diff > self.sync_time:
+                    raise RuntimeError(f'Last acquired image is {diff - self.sync_time:0.4f} seconds too old')
+
+                # Convert the image and append
+                if self.last_frame.encoding == "mono16":
+                    tmp = self.cvb.imgmsg_to_cv2(self.last_frame, desired_encoding="mono16")
+                    self.images.append(cv2.cvtColor(tmp, cv2.COLOR_BGR2GRAY))
+                else:
+                    self.images.append(self.cvb.imgmsg_to_cv2(self.last_frame, desired_encoding="bgr8"))
+
+                # Lookup the pose
+                pose = self.buffer.lookup_transform(self.base_frame, self.tool_frame, self.last_frame.header.stamp, rospy.Duration(1))
+                self.poses.append(pose)
+
+                res.success = True
+                res.message = 'Data collected successfully'
+        except Exception as e:
             res.success = False
-            return res
+            res.message = f'{e}'
 
-        rospy.loginfo("Data collected successfully")
-        res.success = True
         return res
 
     
     def save_cb(self, req : TriggerRequest) -> TriggerResponse:
-        rospy.loginfo("Image/TF save triggered...")
+        rospy.loginfo("Save triggered...")
+        res = TriggerResponse()
         try:
-            res = TriggerResponse()
 
-            # Make directory
-            # Warn if path already exists
-            if os.path.exists(self.img_path) or os.path.exists(self.pose_path):
-                rospy.logwarn("WARNING: save path directory already exists. Overwriting!")
             # Make directories
             os.makedirs(self.img_path, exist_ok=True)
             os.makedirs(self.pose_path, exist_ok=True)
+
             # Write images to pose directory
-            count = 0
-            for img, pose in zip(self.images, self.poses):
-                cv2.imwrite(self.img_path + "/" + str(count).zfill(1) + ".png", img)
-                self.save_pose(pose, count)
-                count+=1
-        
-            rospy.loginfo(f"Saved data due to : {self.parent_path}")
+            for idx, (img, pose) in enumerate(zip(self.images, self.poses)):
+                cv2.imwrite(self.img_path + "/" + str(idx).zfill(4) + ".png", img)
+                self.save_pose(pose, idx)
+
+            res.message = f"Saved data due to: \'{self.parent_path}\'"
             res.success = True
-            return res
         except Exception as ex:
-            rospy.logerr(f"Failed to save data due to : {ex}")
+            res.message = f"Failed to save data: \'{ex}\'"
             res.success = False
-            return res
-            
-    
+
+        return res
+
     def save_pose(self, pose: TransformStamped, pose_num: int) -> None:
         # Convert TransformStamped message to a dictionary
         transform_dict = {
-            'header': {
-                'seq': pose.header.seq,
-                'stamp': {
-                    'secs': pose.header.stamp.secs,
-                    'nsecs': pose.header.stamp.nsecs,
-                },
-                'frame_id': pose.header.frame_id,
-            },
-            'child_frame_id': pose.child_frame_id,
-            'transform': {
-                'translation': {
-                    'x': pose.transform.translation.x,
-                    'y': pose.transform.translation.y,
-                    'z': pose.transform.translation.z,
-                },
-                'rotation': {
-                    'x': pose.transform.rotation.x,
-                    'y': pose.transform.rotation.y,
-                    'z': pose.transform.rotation.z,
-                    'w': pose.transform.rotation.w,
-                },
-            },
+            'x': pose.transform.translation.x,
+            'y': pose.transform.translation.y,
+            'z': pose.transform.translation.z,
+            'qx': pose.transform.rotation.x,
+            'qy': pose.transform.rotation.y,
+            'qz': pose.transform.rotation.z,
+            'qw': pose.transform.rotation.w,
         }
 
         # Save the dictionary to YAML file
-        filename = self.pose_path + "/" + str(pose_num).zfill(1) + ".yaml"
+        filename = os.path.join(self.pose_path, f'{str(pose_num).zfill(4)}.yaml')
         with open(filename, 'w') as yaml_file:
             yaml.dump(transform_dict, yaml_file, default_flow_style=False)
 

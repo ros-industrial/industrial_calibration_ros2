@@ -10,7 +10,6 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   cv_bridge)
 
-find_package(OpenCV REQUIRED)
 find_package(yaml-cpp REQUIRED)
 find_package(boost_plugin_loader REQUIRED)
 find_package(industrial_calibration REQUIRED)
@@ -27,7 +26,7 @@ catkin_package(
 ###########
 ## Build ##
 ###########
-include_directories(include ${catkin_INCLUDE_DIRS})
+include_directories(${catkin_INCLUDE_DIRS})
 
 # target detector executable
 add_executable(${PROJECT_NAME}_target_detector src/target_detector.cpp)
@@ -35,7 +34,6 @@ add_dependencies(${PROJECT_NAME}_target_detector ${${PROJECT_NAME}_EXPORTED_TARG
 target_link_libraries(
   ${PROJECT_NAME}_target_detector
   ${catkin_LIBRARIES}
-  ${OpenCV_LIBRARIES}
   yaml-cpp
   boost_plugin_loader::boost_plugin_loader
   industrial_calibration::industrial_calibration)
@@ -43,7 +41,7 @@ target_link_libraries(
 #############
 ## Install ##
 #############
-# Install the executable(s)
+
 catkin_install_python(PROGRAMS 
   scripts/data_collection_node.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

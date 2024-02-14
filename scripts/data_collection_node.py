@@ -4,6 +4,7 @@ from cv_bridge import CvBridge
 import cv2
 import datetime as dt
 from geometry_msgs.msg import TransformStamped
+import numpy as np
 import os
 import rospy
 from sensor_msgs.msg import Image
@@ -55,11 +56,12 @@ class DataCollector:
                     raise RuntimeError(f'Last acquired image is {diff - self.sync_time:0.4f} seconds too old')
 
                 # Convert the image and append
-                if self.last_frame.encoding == "mono16":
-                    tmp = self.cvb.imgmsg_to_cv2(self.last_frame, desired_encoding="mono16")
-                    self.images.append(cv2.cvtColor(tmp, cv2.COLOR_BGR2GRAY))
-                else:
-                    self.images.append(self.cvb.imgmsg_to_cv2(self.last_frame, desired_encoding="bgr8"))
+                image = self.cvb.imgmsg_to_cv2(self.last_frame)
+                if image.dtype != np.dtype(np.uint8):
+                    image = cv2.normalize(image, cv2.NORM_MINMAX, 0, 255).astype(np.uint8)
+                if len(image.shape) != 3:
+                    image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+                self.images.append(image)
 
                 # Lookup the pose
                 pose = self.buffer.lookup_transform(self.base_frame, self.tool_frame, self.last_frame.header.stamp, rospy.Duration(1))

@@ -2,6 +2,7 @@
 
 from cv_bridge import CvBridge
 import cv2
+import datetime as dt
 from geometry_msgs.msg import TransformStamped
 import os
 import rospy
@@ -18,8 +19,8 @@ class DataCollector:
         self.tool_frame = rospy.get_param('~tool_frame')
         self.sync_time = rospy.get_param('~sync_time', 1.0)
 
-        self.img_path = os.path.join(self.parent_path, 'images')
-        self.pose_path = os.path.join(self.parent_path, 'poses')
+        self.img_subdir = 'images'
+        self.pose_subdir = 'poses'
 
         self.poses = []
         self.images = []
@@ -73,19 +74,37 @@ class DataCollector:
         return res
 
     
-    def save_cb(self, req : TriggerRequest) -> TriggerResponse:
+    def save_cb(self, _req: TriggerRequest) -> TriggerResponse:
         rospy.loginfo("Save triggered...")
         res = TriggerResponse()
         try:
-
             # Make directories
-            os.makedirs(self.img_path, exist_ok=True)
-            os.makedirs(self.pose_path, exist_ok=True)
+            time_stamp = dt.datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
+            image_path = os.path.join(self.parent_path, time_stamp, self.img_subdir)
+            os.makedirs(image_path, exist_ok=True)
+            pose_path = os.path.join(self.parent_path, time_stamp, self.pose_subdir)
+            os.makedirs(pose_path, exist_ok=True)
+
+            cal_data = []
 
             # Write images to pose directory
             for idx, (img, pose) in enumerate(zip(self.images, self.poses)):
-                cv2.imwrite(self.img_path + "/" + str(idx).zfill(4) + ".png", img)
-                self.save_pose(pose, idx)
+                filename = str(idx).zfill(4)
+                image_file = f'{filename}.png'
+                pose_file = f'{filename}.yaml'
+                cal_data.append(
+                    {
+                        'image': os.path.join(self.img_subdir, image_file),
+                        'pose': os.path.join(self.pose_subdir, pose_file)
+                    }
+                )
+
+                cv2.imwrite(os.path.join(image_path, image_file), img)
+                self.save_pose(pose, os.path.join(pose_path, pose_file))
+
+            # Write the calibration data file
+            with open(os.path.join(self.parent_path, time_stamp, 'cal_data.yaml'), 'w') as f:
+                yaml.dump(cal_data, f)
 
             res.message = f"Saved data due to: \'{self.parent_path}\'"
             res.success = True
@@ -95,7 +114,9 @@ class DataCollector:
 
         return res
 
-    def save_pose(self, pose: TransformStamped, pose_num: int) -> None:
+    def save_pose(self,
+                  pose: TransformStamped,
+                  filename: str) -> None:
         # Convert TransformStamped message to a dictionary
         transform_dict = {
             'x': pose.transform.translation.x,
@@ -108,14 +129,14 @@ class DataCollector:
         }
 
         # Save the dictionary to YAML file
-        filename = os.path.join(self.pose_path, f'{str(pose_num).zfill(4)}.yaml')
         with open(filename, 'w') as yaml_file:
             yaml.dump(transform_dict, yaml_file, default_flow_style=False)
 
 
 def main():
     rospy.init_node("data_collection_node")
-    DataCollector()
+    _dc = DataCollector()
+    rospy.loginfo('Started data collection node...')
     rospy.spin()
 
 

@@ -90,6 +90,7 @@ int main(int argc, char** argv)
 {
   ros::init(argc, argv, "target_detector_node");
   TargetDetector targetDetectorNode;
+  ROS_INFO_STREAM("Started target detector node...");
   ros::spin();
   
   ros::shutdown();

@@ -99,12 +99,12 @@ class DataCollector:
         res = TriggerResponse()
         try:
             # Make directories
-            time_stamp = dt.datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
-            image_path = os.path.join(self.parent_path, time_stamp, self.img_subdir)
+            save_dir = os.path.join(self.parent_path, dt.datetime.now().strftime('%Y-%m-%d_%H:%M:%S'))
+            image_path = os.path.join(save_dir, self.img_subdir)
             os.makedirs(image_path, exist_ok=True)
-            pose_path = os.path.join(self.parent_path, time_stamp, self.pose_subdir)
+            pose_path = os.path.join(save_dir, self.pose_subdir)
             os.makedirs(pose_path, exist_ok=True)
-            cloud_path = os.path.join(self.parent_path, time_stamp, self.cloud_subdir)
+            cloud_path = os.path.join(save_dir, self.cloud_subdir)
             os.makedirs(cloud_path, exist_ok=True)
 
             cal_data = []
@@ -128,7 +128,7 @@ class DataCollector:
                 self.save_point_cloud(point_cloud, os.path.join(cloud_path, cloud_file))
 
             # Write the calibration data file
-            with open(os.path.join(self.parent_path, 'cal_data.yaml'), 'w') as f:
+            with open(os.path.join(save_dir, 'cal_data.yaml'), 'w') as f:
                 yaml.dump(cal_data, f)
 
             res.message = f"Saved data due to: \'{self.parent_path}\'"

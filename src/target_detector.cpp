@@ -46,20 +46,18 @@ public:
     cv_bridge::CvImagePtr cv_ptr;
     try
     {
-      // Convert to CvImagePtr
-      if (msg->encoding == "mono16")
+      if(sensor_msgs::image_encodings::bitDepth(msg->encoding) == 8)
       {
-        cv_bridge::CvImagePtr temp_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::MONO16);
-
-        cv::Mat img_conv;
-        cv::cvtColor(temp_ptr->image, img_conv, cv::COLOR_GRAY2BGR);
-        img_conv.convertTo(img_conv, CV_8UC1);
-        cv_ptr = cv_bridge::CvImagePtr(
-            new cv_bridge::CvImage(temp_ptr->header, sensor_msgs::image_encodings::BGR8, img_conv));
+        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
       }
       else
       {
-        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+        cv_ptr = cv_bridge::toCvCopy(msg);
+        cv::normalize(cv_ptr->image, cv_ptr->image, 0, 255, cv::NormTypes::NORM_MINMAX);
+        cv_ptr->image.convertTo(cv_ptr->image, CV_8U);
+        cv_ptr->encoding = sensor_msgs::image_encodings::BGR8;
+        if(cv_ptr->image.channels() != 3)
+          cv::cvtColor(cv_ptr->image, cv_ptr->image, cv::COLOR_GRAY2BGR);
       }
 
       // Find target in image

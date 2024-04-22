@@ -1,3 +1,5 @@
+#include "utils.h"
+
 #include <boost_plugin_loader/plugin_loader.hpp>
 #include <cv_bridge/cv_bridge.h>
 #include <image_transport/image_transport.h>
@@ -6,7 +8,6 @@
 #include <opencv2/opencv.hpp>
 #include <ros/ros.h>
 #include <sensor_msgs/Image.h>
-#include <sensor_msgs/image_encodings.h>
 #include <yaml-cpp/yaml.h>
 
 template<typename T>
@@ -43,22 +44,9 @@ public:
 
   void imageCb(const sensor_msgs::ImageConstPtr& msg)
   {
-    cv_bridge::CvImagePtr cv_ptr;
     try
     {
-      if(sensor_msgs::image_encodings::bitDepth(msg->encoding) == 8)
-      {
-        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
-      }
-      else
-      {
-        cv_ptr = cv_bridge::toCvCopy(msg);
-        cv::normalize(cv_ptr->image, cv_ptr->image, 0, 255, cv::NormTypes::NORM_MINMAX);
-        cv_ptr->image.convertTo(cv_ptr->image, CV_8U);
-        cv_ptr->encoding = sensor_msgs::image_encodings::BGR8;
-        if(cv_ptr->image.channels() != 3)
-          cv::cvtColor(cv_ptr->image, cv_ptr->image, cv::COLOR_GRAY2BGR);
-      }
+      cv_bridge::CvImagePtr cv_ptr = fromROS(msg);
 
       // Find target in image
       industrial_calibration::TargetFeatures2D target_features = target_finder_->findTargetFeatures(cv_ptr->image);

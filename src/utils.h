@@ -9,7 +9,7 @@ cv_bridge::CvImagePtr fromROS(sensor_msgs::ImageConstPtr msg)
   cv_bridge::CvImagePtr cv_ptr;
 
   // Check the bit-depth
-  if(sensor_msgs::image_encodings::bitDepth(msg->encoding) == 8)
+  if (sensor_msgs::image_encodings::bitDepth(msg->encoding) == 8)
   {
     cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
   }
@@ -22,8 +22,7 @@ cv_bridge::CvImagePtr fromROS(sensor_msgs::ImageConstPtr msg)
   }
 
   // Check the number of channels
-  if(cv_ptr->image.channels() != 3)
-    cv::cvtColor(cv_ptr->image, cv_ptr->image, cv::COLOR_GRAY2BGR);
+  if (cv_ptr->image.channels() != 3) cv::cvtColor(cv_ptr->image, cv_ptr->image, cv::COLOR_GRAY2BGR);
 
   return cv_ptr;
 }

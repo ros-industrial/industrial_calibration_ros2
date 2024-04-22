@@ -13,12 +13,11 @@
 
 #include <fstream>
 
-template<typename T>
+template <typename T>
 T getParameter(ros::NodeHandle& nh, const std::string& key)
 {
   T val;
-  if(!nh.getParam(key, val))
-    throw std::runtime_error("Failed to get '" + key + "' parameter");
+  if (!nh.getParam(key, val)) throw std::runtime_error("Failed to get '" + key + "' parameter");
   return val;
 }
 
@@ -42,7 +41,8 @@ public:
 
     // Load the target finder
     YAML::Node target_finder_config = getMember<YAML::Node>(config, "target_finder");
-    factory_ = loader_.createInstance<industrial_calibration::TargetFinderFactoryOpenCV>(getMember<std::string>(target_finder_config, "type"));
+    factory_ = loader_.createInstance<industrial_calibration::TargetFinderFactoryOpenCV>(
+        getMember<std::string>(target_finder_config, "type"));
     target_finder_ = factory_->create(target_finder_config);
 
     // Load the camera intrinsics
@@ -52,15 +52,11 @@ public:
     pnp_.camera_to_target_guess = getMember<Eigen::Isometry3d>(config, "camera_to_target");
   }
 
-  void imageCb(const sensor_msgs::ImageConstPtr& msg)
-  {
-    last_image_ = msg;
-  }
+  void imageCb(const sensor_msgs::ImageConstPtr& msg) { last_image_ = msg; }
 
   void checkImage()
   {
-    if(!last_image_)
-      throw std::runtime_error("No image yet acquired");
+    if (!last_image_) throw std::runtime_error("No image yet acquired");
 
     // Check the time of the last image
     double time_tolerance = getParameter<double>(pnh_, "time_tolerance");
@@ -87,8 +83,7 @@ public:
 
       // Perform the PnP optimization
       industrial_calibration::PnPResult pnp_result = industrial_calibration::optimize(pnp_);
-      if(!pnp_result.converged)
-        throw std::runtime_error("PnP optimization did not converge");
+      if (!pnp_result.converged) throw std::runtime_error("PnP optimization did not converge");
 
       // Save to file
       YAML::Node node(pnp_result.camera_to_target);
@@ -102,7 +97,7 @@ public:
       ss << node;
       res.message = ss.str();
     }
-    catch(const std::exception& ex)
+    catch (const std::exception& ex)
     {
       res.success = false;
       res.message = ex.what();
@@ -125,8 +120,7 @@ public:
 
       // Perform the PnP optimization
       industrial_calibration::PnPResult pnp_result = industrial_calibration::optimize(pnp_);
-      if(!pnp_result.converged)
-        throw std::runtime_error("PnP optimization did not converge");
+      if (!pnp_result.converged) throw std::runtime_error("PnP optimization did not converge");
 
       // Compute the pose difference
       Eigen::Isometry3d diff = pnp_.camera_to_target_guess.inverse() * pnp_result.camera_to_target;
@@ -134,7 +128,7 @@ public:
       // Compare pose difference to tolerance
       double position_diff = diff.translation().norm();
       double position_tolerance = getParameter<double>(pnh_, "position_tolerance");
-      if(position_diff > position_tolerance)
+      if (position_diff > position_tolerance)
       {
         std::stringstream ss;
         ss << "Translation difference exceeds tolerance by " << position_diff - position_tolerance << " (m)";
@@ -143,7 +137,7 @@ public:
 
       double orientation_diff = Eigen::Quaterniond::Identity().angularDistance(Eigen::Quaterniond(diff.linear()));
       double orientation_tolerance = getParameter<double>(pnh_, "orientation_tolerance");
-      if(orientation_diff > orientation_tolerance)
+      if (orientation_diff > orientation_tolerance)
       {
         std::stringstream ss;
         ss << "Orientation difference exceeds tolerance by " << orientation_diff - orientation_tolerance << " (m)";
@@ -152,7 +146,8 @@ public:
 
       res.success = true;
       std::stringstream ss;
-      ss << "Target is within tolerance (" << position_diff << " (m), " << orientation_tolerance * 180.0 / M_PI << " (deg))";
+      ss << "Target is within tolerance (" << position_diff << " (m), " << orientation_tolerance * 180.0 / M_PI
+         << " (deg))";
       res.message = ss.str();
     }
     catch (const std::runtime_error& ex)

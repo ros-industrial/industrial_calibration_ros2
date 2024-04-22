@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0.2)
+cmake_minimum_required(VERSION 3.5)
 project(industrial_calibration_ros)
 
 add_compile_options(-std=c++11)
@@ -12,7 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 find_package(yaml-cpp REQUIRED)
 find_package(boost_plugin_loader REQUIRED)
-find_package(industrial_calibration REQUIRED)
+find_package(industrial_calibration REQUIRED COMPONENTS core target_finders_opencv)
 
 catkin_package(
   INCLUDE_DIRS
@@ -36,7 +36,8 @@ target_link_libraries(
   ${catkin_LIBRARIES}
   yaml-cpp
   boost_plugin_loader::boost_plugin_loader
-  industrial_calibration::industrial_calibration)
+  industrial_calibration::industrial_calibration_core
+  industrial_calibration::industrial_calibration_target_finders_opencv)
 
 #############
 ## Install ##

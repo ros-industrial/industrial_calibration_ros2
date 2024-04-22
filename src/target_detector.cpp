@@ -1,8 +1,8 @@
 #include <boost_plugin_loader/plugin_loader.hpp>
 #include <cv_bridge/cv_bridge.h>
 #include <image_transport/image_transport.h>
-#include <industrial_calibration/serialization.h>
-#include <industrial_calibration/target_finders/target_finder.h>
+#include <industrial_calibration/core/serialization.h>
+#include <industrial_calibration/target_finders/opencv/target_finder.h>
 #include <opencv2/opencv.hpp>
 #include <ros/ros.h>
 #include <sensor_msgs/Image.h>
@@ -32,7 +32,7 @@ public:
     ros::NodeHandle pnh("~");
     YAML::Node config = YAML::LoadFile(getParameter<std::string>(pnh, "config_file"));
     YAML::Node target_finder_config = getMember<YAML::Node>(config, "target_finder");
-    factory_ = loader_.createInstance<industrial_calibration::TargetFinderFactory>(getMember<std::string>(target_finder_config, "type"));
+    factory_ = loader_.createInstance<industrial_calibration::TargetFinderFactoryOpenCV>(getMember<std::string>(target_finder_config, "type"));
     target_finder_ = factory_->create(target_finder_config);
 
     // Setup subscriber and publishers
@@ -61,7 +61,7 @@ public:
       }
 
       // Find target in image
-      industrial_calibration::TargetFeatures target_features = target_finder_->findTargetFeatures(cv_ptr->image);
+      industrial_calibration::TargetFeatures2D target_features = target_finder_->findTargetFeatures(cv_ptr->image);
       cv::Mat annotated_image = target_finder_->drawTargetFeatures(cv_ptr->image, target_features);
       cv_bridge::CvImagePtr annotated_image_cv(new cv_bridge::CvImage(cv_ptr->header, cv_ptr->encoding, annotated_image));
 
@@ -77,8 +77,8 @@ public:
 
 private:
   boost_plugin_loader::PluginLoader loader_;
-  industrial_calibration::TargetFinderFactory::Ptr factory_;
-  industrial_calibration::TargetFinder::ConstPtr target_finder_;
+  industrial_calibration::TargetFinderFactoryOpenCV::Ptr factory_;
+  industrial_calibration::TargetFinderOpenCV::ConstPtr target_finder_;
 
   image_transport::ImageTransport it_;
   image_transport::Subscriber image_sub_;

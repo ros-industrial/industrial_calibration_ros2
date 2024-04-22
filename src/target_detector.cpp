@@ -10,20 +10,18 @@
 #include <sensor_msgs/Image.h>
 #include <yaml-cpp/yaml.h>
 
-template<typename T>
+template <typename T>
 T getParameter(ros::NodeHandle& nh, const std::string& key)
 {
   T val;
-  if(!nh.getParam(key, val))
-      throw std::runtime_error("Failed to get '" + key + "' parameter");
+  if (!nh.getParam(key, val)) throw std::runtime_error("Failed to get '" + key + "' parameter");
   return val;
 }
 
 class TargetDetector
 {
 public:
-  TargetDetector()
-      : it_(ros::NodeHandle())
+  TargetDetector() : it_(ros::NodeHandle())
   {
     // Configure the plugin loader
     loader_.search_libraries.insert(INDUSTRIAL_CALIBRATION_PLUGIN_LIBRARIES);
@@ -33,7 +31,8 @@ public:
     ros::NodeHandle pnh("~");
     YAML::Node config = YAML::LoadFile(getParameter<std::string>(pnh, "config_file"));
     YAML::Node target_finder_config = getMember<YAML::Node>(config, "target_finder");
-    factory_ = loader_.createInstance<industrial_calibration::TargetFinderFactoryOpenCV>(getMember<std::string>(target_finder_config, "type"));
+    factory_ = loader_.createInstance<industrial_calibration::TargetFinderFactoryOpenCV>(
+        getMember<std::string>(target_finder_config, "type"));
     target_finder_ = factory_->create(target_finder_config);
 
     // Setup subscriber and publishers
@@ -51,7 +50,8 @@ public:
       // Find target in image
       industrial_calibration::TargetFeatures2D target_features = target_finder_->findTargetFeatures(cv_ptr->image);
       cv::Mat annotated_image = target_finder_->drawTargetFeatures(cv_ptr->image, target_features);
-      cv_bridge::CvImagePtr annotated_image_cv(new cv_bridge::CvImage(cv_ptr->header, cv_ptr->encoding, annotated_image));
+      cv_bridge::CvImagePtr annotated_image_cv(
+          new cv_bridge::CvImage(cv_ptr->header, cv_ptr->encoding, annotated_image));
 
       // Publish raw_image and image with drawn features
       detected_image_pub_.publish(msg);
@@ -80,7 +80,7 @@ int main(int argc, char** argv)
   TargetDetector targetDetectorNode;
   ROS_INFO_STREAM("Started target detector node...");
   ros::spin();
-  
+
   ros::shutdown();
   return 0;
 }

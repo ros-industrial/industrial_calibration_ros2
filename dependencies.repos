@@ -1,5 +1,13 @@
 repositories:
   industrial_calibration:
     type: git
-    url: git@github.com:ros-industrial/industrial_calibration.git
-    version: main
+    url: https://github.com/ros-industrial/industrial_calibration.git
+    version: 1.0.0
+  ros_industrial_cmake_boilerplate:
+    type: git
+    url: https://github.com/ros-industrial/ros_industrial_cmake_boilerplate.git
+    version: 0.5.4
+  boost_plugin_loader:
+    type: git
+    url: https://github.com/tesseract-robotics/boost_plugin_loader.git
+    version: 0.2.1

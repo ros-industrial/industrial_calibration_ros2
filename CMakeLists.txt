@@ -54,7 +54,7 @@ target_link_libraries(
 
 catkin_install_python(PROGRAMS 
   scripts/data_collection_node.py
-  scripts/photoneo_data_collection_node.py
+  scripts/3d_data_collection_node.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 install(

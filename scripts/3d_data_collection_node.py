@@ -165,9 +165,9 @@ class DataCollector:
 
 
 def main():
-    rospy.init_node("photoneo_data_collection_node")
+    rospy.init_node("3d_data_collection_node")
     _dc = DataCollector()
-    rospy.loginfo('Started data collection node...')
+    rospy.loginfo('Started 3D data collection node...')
     rospy.spin()
 
 

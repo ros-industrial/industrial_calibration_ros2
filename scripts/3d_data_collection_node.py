@@ -16,6 +16,30 @@ from tf2_ros import TransformListener, Buffer
 import yaml
 
 
+def save_pose(pose: TransformStamped,
+              filename: str) -> None:
+    # Convert TransformStamped message to a dictionary
+    transform_dict = {
+        'x': pose.transform.translation.x,
+        'y': pose.transform.translation.y,
+        'z': pose.transform.translation.z,
+        'qx': pose.transform.rotation.x,
+        'qy': pose.transform.rotation.y,
+        'qz': pose.transform.rotation.z,
+        'qw': pose.transform.rotation.w,
+    }
+
+    # Save the dictionary to YAML file
+    with open(filename, 'w') as yaml_file:
+        yaml.dump(transform_dict, yaml_file, default_flow_style=False)
+
+
+def save_point_cloud(point_cloud: o3d.geometry.PointCloud,
+                     filename: str) -> None:
+    # Save the point cloud as a PCD file
+    o3d.io.write_point_cloud(filename, point_cloud)
+
+
 class DataCollector:
     def __init__(self):
         self.parent_path = rospy.get_param('~save_path')
@@ -49,7 +73,7 @@ class DataCollector:
                 img_msg: Image,
                 pc_msg: PointCloud2) -> None:
         try:
-            rospy.loginfo('Acquiring data...')
+            rospy.loginfo('Adding observation...')
             # Collect pose
             pose = self.buffer.lookup_transform(self.base_frame, self.tool_frame, img_msg.header.stamp, rospy.Duration(1.0))
 
@@ -70,7 +94,7 @@ class DataCollector:
             self.images.append(image)
             self.point_clouds.append(point_cloud)
 
-            rospy.loginfo('Successfully acquired data')
+            rospy.loginfo('Observation added')
         except Exception as ex:
             rospy.logerr(ex)
 
@@ -104,8 +128,8 @@ class DataCollector:
                 )
 
                 cv2.imwrite(os.path.join(image_path, img_file), img)
-                self.save_pose(pose, os.path.join(pose_path, pose_file))
-                self.save_point_cloud(point_cloud, os.path.join(cloud_path, cloud_file))
+                save_pose(pose, os.path.join(pose_path, pose_file))
+                save_point_cloud(point_cloud, os.path.join(cloud_path, cloud_file))
 
             # Write the calibration data file
             with open(os.path.join(save_dir, 'cal_data.yaml'), 'w') as f:
@@ -119,33 +143,9 @@ class DataCollector:
 
         return res
 
-    def save_pose(self,
-                  pose: TransformStamped,
-                  filename: str) -> None:
-        # Convert TransformStamped message to a dictionary
-        transform_dict = {
-            'x': pose.transform.translation.x,
-            'y': pose.transform.translation.y,
-            'z': pose.transform.translation.z,
-            'qx': pose.transform.rotation.x,
-            'qy': pose.transform.rotation.y,
-            'qz': pose.transform.rotation.z,
-            'qw': pose.transform.rotation.w,
-        }
-
-        # Save the dictionary to YAML file
-        with open(filename, 'w') as yaml_file:
-            yaml.dump(transform_dict, yaml_file, default_flow_style=False)
-
-    def save_point_cloud(self,
-                         point_cloud: o3d.geometry.PointCloud,
-                         filename: str) -> None:
-        # Save the point cloud as a PCD file
-        o3d.io.write_point_cloud(filename, point_cloud)
-
 
 def main():
-    rospy.init_node("3d_data_collection_node")
+    rospy.init_node("data_collection_3d_node")
     _dc = DataCollector()
     rospy.loginfo('Started 3D data collection node...')
     rospy.spin()

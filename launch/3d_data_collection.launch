@@ -11,18 +11,12 @@
     <param name="config_file" value="$(arg config_file)"/>
   </node>
 
-  <!-- Image trigger node-->
-  <remap from="image" to="image_detected"/>
-  <remap from="image_out" to="image_detected_trigger"/>
-  <node name="image_trigger" pkg="industrial_calibration_ros" type="image_trigger.py">
-    <param name="sync_time" value="$(arg sync_time)"/>
-  </node>
-
   <!-- Data collector -->
-  <remap from="image" to="image_detected_trigger"/>
-  <node name="data_collection_node" pkg="industrial_calibration_ros" type="data_collection_node.py" output="screen">
+  <remap from="image" to="image_detected"/>
+  <node name="data_collection_3d_node" pkg="industrial_calibration_ros" type="3d_data_collection_node.py" output="screen">
     <param name="base_frame" value="$(arg base_frame)"/>
     <param name="tool_frame" value="$(arg tool_frame)"/>
     <param name="save_path" value="$(arg save_path)"/>
+    <param name="sync_time" value="$(arg sync_time)"/>
   </node>
 </launch>

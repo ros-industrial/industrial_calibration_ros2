@@ -8,9 +8,27 @@ import numpy as np
 import os
 import rospy
 from sensor_msgs.msg import Image
-from std_srvs.srv import *
+from std_srvs.srv import Trigger, TriggerRequest, TriggerResponse
 from tf2_ros import TransformListener, Buffer
 import yaml
+
+
+def save_pose(pose: TransformStamped,
+              filename: str) -> None:
+    # Convert TransformStamped message to a dictionary
+    transform_dict = {
+        'x': pose.transform.translation.x,
+        'y': pose.transform.translation.y,
+        'z': pose.transform.translation.z,
+        'qx': pose.transform.rotation.x,
+        'qy': pose.transform.rotation.y,
+        'qz': pose.transform.rotation.z,
+        'qw': pose.transform.rotation.w,
+    }
+
+    # Save the dictionary to YAML file
+    with open(filename, 'w') as yaml_file:
+        yaml.dump(transform_dict, yaml_file, default_flow_style=False)
 
 
 class DataCollector:
@@ -18,7 +36,6 @@ class DataCollector:
         self.parent_path = rospy.get_param('~save_path')
         self.base_frame = rospy.get_param('~base_frame')
         self.tool_frame = rospy.get_param('~tool_frame')
-        self.sync_time = rospy.get_param('~sync_time', 1.0)
 
         self.img_subdir = 'images'
         self.pose_subdir = 'poses'
@@ -31,51 +48,36 @@ class DataCollector:
         self.listener = TransformListener(self.buffer)
 
         # Set up image subscriber
-        self.last_frame : Image = None
         self.cvb = CvBridge()
         self.img_sub = rospy.Subscriber('image', Image, callback=self.img_cb)
 
         # Set up servers
-        self.collect_server = rospy.Service('collect', Trigger, self.collect_cb, 1)
         self.save_server = rospy.Service('save', Trigger, self.save_cb, 1)
 
-    
     def img_cb(self, img_msg : Image) -> None:
-        self.last_frame = img_msg
-    
-    def collect_cb(self, _req: TriggerRequest) -> TriggerResponse:
-        res = TriggerResponse()
-        rospy.loginfo("Collection triggered...")
-
         try:
-            if self.last_frame is  None:
-                raise RuntimeError('No image acquired yet')
-            else:
-                diff = rospy.get_time() - self.last_frame.header.stamp.to_sec()
-                if diff > self.sync_time:
-                    raise RuntimeError(f'Last acquired image is {diff - self.sync_time:0.4f} seconds too old')
+            rospy.loginfo('Adding observation...')
 
-                # Convert the image and append
-                image = self.cvb.imgmsg_to_cv2(self.last_frame)
-                if image.dtype != np.dtype(np.uint8):
-                    image = cv2.normalize(image, cv2.NORM_MINMAX, 0, 255).astype(np.uint8)
-                if len(image.shape) != 3:
-                    image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
-                self.images.append(image)
+            # Convert the image and append
+            image = self.cvb.imgmsg_to_cv2(img_msg)
+            if image.dtype != np.dtype(np.uint8):
+                image = cv2.normalize(image, cv2.NORM_MINMAX, 0, 255).astype(np.uint8)
+            if len(image.shape) != 3:
+                image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
 
-                # Lookup the pose
-                pose = self.buffer.lookup_transform(self.base_frame, self.tool_frame, self.last_frame.header.stamp, rospy.Duration(1))
-                self.poses.append(pose)
+            # Lookup the pose
+            pose = self.buffer.lookup_transform(self.base_frame, self.tool_frame, img_msg.header.stamp,
+                                                rospy.Duration(1))
 
-                res.success = True
-                res.message = 'Data collected successfully'
+            # Add to the internal buffer
+            self.images.append(image)
+            self.poses.append(pose)
+
+            rospy.loginfo("Observation added")
+
         except Exception as e:
-            res.success = False
-            res.message = f'{e}'
+            rospy.logerr(e)
 
-        return res
-
-    
     def save_cb(self, _req: TriggerRequest) -> TriggerResponse:
         rospy.loginfo("Save triggered...")
         res = TriggerResponse()
@@ -102,7 +104,7 @@ class DataCollector:
                 )
 
                 cv2.imwrite(os.path.join(image_path, image_file), img)
-                self.save_pose(pose, os.path.join(pose_path, pose_file))
+                save_pose(pose, os.path.join(pose_path, pose_file))
 
             # Write the calibration data file
             with open(os.path.join(save_dir, 'cal_data.yaml'), 'w') as f:
@@ -115,24 +117,6 @@ class DataCollector:
             res.success = False
 
         return res
-
-    def save_pose(self,
-                  pose: TransformStamped,
-                  filename: str) -> None:
-        # Convert TransformStamped message to a dictionary
-        transform_dict = {
-            'x': pose.transform.translation.x,
-            'y': pose.transform.translation.y,
-            'z': pose.transform.translation.z,
-            'qx': pose.transform.rotation.x,
-            'qy': pose.transform.rotation.y,
-            'qz': pose.transform.rotation.z,
-            'qw': pose.transform.rotation.w,
-        }
-
-        # Save the dictionary to YAML file
-        with open(filename, 'w') as yaml_file:
-            yaml.dump(transform_dict, yaml_file, default_flow_style=False)
 
 
 def main():

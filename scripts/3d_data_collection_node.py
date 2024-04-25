@@ -8,7 +8,6 @@ from message_filters import ApproximateTimeSynchronizer, Subscriber
 import numpy as np
 import os
 import open3d as o3d
-from phoxi_camera.srv import *
 import rospy
 from sensor_msgs.msg import Image, PointCloud2
 import sensor_msgs.point_cloud2 as pc2
@@ -44,7 +43,6 @@ class DataCollector:
         self.ts.registerCallback(self.sync_cb)
 
         # Set up servers
-        self.collect_server = rospy.Service('collect', Trigger, self.collect_cb, 1)
         self.save_server = rospy.Service('save', Trigger, self.save_cb, 1)
 
     def sync_cb(self,
@@ -75,24 +73,6 @@ class DataCollector:
             rospy.loginfo('Successfully acquired data')
         except Exception as ex:
             rospy.logerr(ex)
-
-    def collect_cb(self, _req: TriggerRequest) -> TriggerResponse:
-        res = TriggerResponse()
-
-        # Call the photoneo GetFrame service
-        photoneo_req = GetFrameRequest()
-        photoneo_req.in_ = -1
-
-        get_frame = rospy.ServiceProxy('phoxi_camera/get_frame', GetFrame)
-        photoneo_res = get_frame(photoneo_req)
-
-        res.success = photoneo_res.success
-        if res.success:
-            res.message = "Data capture triggered..."
-        else:
-            res.message = photoneo_res.message
-
-        return res
 
     def save_cb(self, _req: TriggerRequest) -> TriggerResponse:
         rospy.loginfo("Save triggered...")

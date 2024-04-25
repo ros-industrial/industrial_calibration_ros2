@@ -57,6 +57,7 @@ catkin_install_python(
   PROGRAMS
   scripts/data_collection_node.py
   scripts/3d_data_collection_node.py
+  scripts/image_trigger.py
   DESTINATION
   ${CATKIN_PACKAGE_BIN_DESTINATION})
 

@@ -14,19 +14,26 @@ If the target is identified, it:
 ### Data Collector Node
 ROS node that collects data for performing hand-eye calibration with an RGB camera.
 This node:
-  - subscribes to a stream of images in which a calibration target has been identified
-(i.e., the republished image topic from the target finder node)
+  - subscribes to
+    - an image topic (`sensor_msgs/Image`) in which a calibration target has been identified (i.e., the republished image topic from the target finder node)
+    - TF, to compute the pose from the camera/target mount frame to the moving camera/target frame
   - exposes a service for collecting an image/pose observation pair (`/collect`)
+      > Note: when this service is called, the last received image is used to detect the calibration target 
   - exposes a service for saving collected image/pose observation pairs to a specified directory (/`save`)
 
+This node is intended for 2D cameras that publish images continuously or at a higher frequency than you would like to collect calibration observations 
+
 ### 3D Data Collector Node
-ROS node that collectes data for performing a hand-eye calibration with a combination RGB + point cloud sensor (e.g., Intel Realsense, Photoneo, etc.)
+ROS node that collects data for performing a hand-eye calibration with a combination RGB + point cloud sensor (e.g., Photoneo, etc.)
 This node:
-  - subscribes to a stream of stream in which a calibration target has been identified
-(i.e., the republished image topic from the target finder node)
-  - subscribes to a point cloud of the 3D scene in which the calibration target has been identified
-  - exposes a service for collecting an image/cloud/pose observation triplet (`/collect`)
+  - subscribes in a synchronized manner to:
+    - an image topic (`sensor_msgs/Image`) in which a calibration target has been identified (i.e., the republished image topic from the target finder node)
+    - a point cloud topic (`sensor_msgs/PointCloud2`) of the 3D scene in which the calibration target has been identified
+    - TF, to compute the pose from the camera/target mount frame to the moving camera/target frame
+        > Note: a calibration observation is acquired whenever a new image/point cloud pair is received by the synchronized subscriber
   - exposes a service for saving collected image/cloud/pose observations to a specified directory (`/save`)
+
+This node is intended for 3D sensors that publish data on a trigger (e.g,. Photoneo, Zivid, etc.)
 
 ## Build
 ```commandLine

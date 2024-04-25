@@ -4,14 +4,22 @@
   <arg name="tool_frame" default="tool0"/>
   <arg name="save_path" default="/tmp/calibration"/>
   <arg name="config_file" default="$(find industrial_calibration_ros)/config/target_detector_config.yaml"/>
+  <arg name="sync_time" default="1.0"/>
 
   <!-- Target detector node -->
   <node name="target_detector_node" pkg="industrial_calibration_ros" type="industrial_calibration_ros_target_detector" output="screen">
     <param name="config_file" value="$(arg config_file)"/>
   </node>
 
-  <!-- Data collector -->
+  <!-- Image trigger node-->
   <remap from="image" to="image_detected"/>
+  <remap from="image_out" to="image_detected_trigger"/>
+  <node name="image_trigger" pkg="industrial_calibration_ros" type="image_trigger.py">
+    <param name="sync_time" value="$(arg sync_time)"/>
+  </node>
+
+  <!-- Data collector -->
+  <remap from="image" to="image_detected_trigger"/>
   <node name="data_collection_node" pkg="industrial_calibration_ros" type="data_collection_node.py" output="screen">
     <param name="base_frame" value="$(arg base_frame)"/>
     <param name="tool_frame" value="$(arg tool_frame)"/>

@@ -49,7 +49,7 @@ class DataCollector:
                 img_msg: Image,
                 pc_msg: PointCloud2) -> None:
         try:
-            rospy.loginfo('Acquiring data...')
+            rospy.loginfo('Adding observation...')
             # Collect pose
             pose = self.buffer.lookup_transform(self.base_frame, self.tool_frame, img_msg.header.stamp, rospy.Duration(1.0))
 
@@ -70,7 +70,7 @@ class DataCollector:
             self.images.append(image)
             self.point_clouds.append(point_cloud)
 
-            rospy.loginfo('Successfully acquired data')
+            rospy.loginfo('Observation added')
         except Exception as ex:
             rospy.logerr(ex)
 

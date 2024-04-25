@@ -33,6 +33,7 @@ jobs:
       - name: Build
         uses: tesseract-robotics/colcon-action@v6
         with:
+          before-script: source /opt/ros/${{ matrix.distro }}/setup.bash
           ccache-enabled: false
           rosdep-enabled: true
           ros-enabled: true

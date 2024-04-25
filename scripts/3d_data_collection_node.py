@@ -16,6 +16,30 @@ from tf2_ros import TransformListener, Buffer
 import yaml
 
 
+def save_pose(pose: TransformStamped,
+              filename: str) -> None:
+    # Convert TransformStamped message to a dictionary
+    transform_dict = {
+        'x': pose.transform.translation.x,
+        'y': pose.transform.translation.y,
+        'z': pose.transform.translation.z,
+        'qx': pose.transform.rotation.x,
+        'qy': pose.transform.rotation.y,
+        'qz': pose.transform.rotation.z,
+        'qw': pose.transform.rotation.w,
+    }
+
+    # Save the dictionary to YAML file
+    with open(filename, 'w') as yaml_file:
+        yaml.dump(transform_dict, yaml_file, default_flow_style=False)
+
+
+def save_point_cloud(point_cloud: o3d.geometry.PointCloud,
+                     filename: str) -> None:
+    # Save the point cloud as a PCD file
+    o3d.io.write_point_cloud(filename, point_cloud)
+
+
 class DataCollector:
     def __init__(self):
         self.parent_path = rospy.get_param('~save_path')
@@ -104,8 +128,8 @@ class DataCollector:
                 )
 
                 cv2.imwrite(os.path.join(image_path, img_file), img)
-                self.save_pose(pose, os.path.join(pose_path, pose_file))
-                self.save_point_cloud(point_cloud, os.path.join(cloud_path, cloud_file))
+                save_pose(pose, os.path.join(pose_path, pose_file))
+                save_point_cloud(point_cloud, os.path.join(cloud_path, cloud_file))
 
             # Write the calibration data file
             with open(os.path.join(save_dir, 'cal_data.yaml'), 'w') as f:
@@ -118,30 +142,6 @@ class DataCollector:
             res.success = False
 
         return res
-
-    def save_pose(self,
-                  pose: TransformStamped,
-                  filename: str) -> None:
-        # Convert TransformStamped message to a dictionary
-        transform_dict = {
-            'x': pose.transform.translation.x,
-            'y': pose.transform.translation.y,
-            'z': pose.transform.translation.z,
-            'qx': pose.transform.rotation.x,
-            'qy': pose.transform.rotation.y,
-            'qz': pose.transform.rotation.z,
-            'qw': pose.transform.rotation.w,
-        }
-
-        # Save the dictionary to YAML file
-        with open(filename, 'w') as yaml_file:
-            yaml.dump(transform_dict, yaml_file, default_flow_style=False)
-
-    def save_point_cloud(self,
-                         point_cloud: o3d.geometry.PointCloud,
-                         filename: str) -> None:
-        # Save the point cloud as a PCD file
-        o3d.io.write_point_cloud(filename, point_cloud)
 
 
 def main():

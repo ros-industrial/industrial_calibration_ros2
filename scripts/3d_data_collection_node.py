@@ -133,7 +133,7 @@ class DataCollector:
 
             # Write the calibration data file
             with open(os.path.join(save_dir, 'cal_data.yaml'), 'w') as f:
-                yaml.dump(cal_data, f)
+                yaml.dump({'data': cal_data}, f)
 
             res.message = f"Saved data due to: \'{self.parent_path}\'"
             res.success = True

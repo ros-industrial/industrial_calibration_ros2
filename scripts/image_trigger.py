@@ -2,6 +2,7 @@
 
 from cv_bridge import CvBridge
 import rclpy
+from rclpy.time import Time
 from rclpy.node import Node
 from sensor_msgs.msg import Image
 from std_srvs.srv import Trigger

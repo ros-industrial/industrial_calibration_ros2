@@ -5,10 +5,12 @@
   <arg name="save_path" default="/tmp/calibration"/>
   <arg name="config_file" default="$(find-pkg-share industrial_calibration_ros2)/config/target_detector_config.yaml"/>
   <arg name="sync_time" default="1.0"/>
+  <arg name="image_topic" default="/camera/color/image_raw"/>
 
   <!-- Target detector node -->
   <node name="target_detector_node" pkg="industrial_calibration_ros2" exec="industrial_calibration_ros2_target_detector" output="screen">
     <param name="config_file" value="$(var config_file)"/>
+    <remap from="image" to="$(var image_topic)"/>
   </node>
 
   <!-- Image trigger node-->

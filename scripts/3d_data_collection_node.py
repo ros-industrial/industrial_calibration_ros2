@@ -12,7 +12,7 @@ import open3d as o3d
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image, PointCloud2
-import sensor_msgs.point_cloud2 as pc2
+from sensor_msgs_py import point_cloud2 as pc2
 from std_srvs.srv import Trigger
 from tf2_ros import TransformListener, Buffer
 import yaml

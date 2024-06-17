@@ -20,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        distro: [noetic]
+        distro: [foxy, humble, jazzy, rolling]
     container:
       image: ros:${{ matrix.distro }}
       env:

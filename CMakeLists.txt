@@ -15,8 +15,6 @@ find_package(industrial_calibration REQUIRED COMPONENTS core optimizations targe
 # ######################################################################################################################
 # Build ##
 # ######################################################################################################################
-include_directories(include ${YAML_CPP_INCLUDE_DIRS})
-
 # Target Detector Node
 add_executable(${PROJECT_NAME}_target_detector src/target_detector.cpp)
 target_link_libraries(
@@ -31,14 +29,11 @@ ament_target_dependencies(${PROJECT_NAME}_target_detector
   image_transport
   sensor_msgs
   cv_bridge
-  yaml-cpp
-  boost_plugin_loader
-  industrial_calibration
   std_srvs
   cv_bridge
 )
 
-## PnP Validation node
+# PnP Validation node
 add_executable(${PROJECT_NAME}_pnp_validation_node src/pnp_validation_node.cpp)
 target_link_libraries(
   ${PROJECT_NAME}_pnp_validation_node
@@ -52,9 +47,6 @@ ament_target_dependencies(${PROJECT_NAME}_pnp_validation_node
   image_transport
   sensor_msgs
   cv_bridge
-  yaml-cpp
-  boost_plugin_loader
-  industrial_calibration
   std_srvs
   cv_bridge
 )

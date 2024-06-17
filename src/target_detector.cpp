@@ -5,7 +5,6 @@
 #include <image_transport/image_transport.hpp>
 #include <industrial_calibration/core/serialization.h>
 #include <industrial_calibration/target_finders/opencv/target_finder.h>
-//#include <opencv2/opencv.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/image.hpp>
 #include <yaml-cpp/yaml.h>

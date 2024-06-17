@@ -28,7 +28,7 @@ class ImageTrigger(Node):
             10
         )
 
-        self.img_pub = self.create_publisher(Image, 'image_detected_trigger', 10)
+        self.img_pub = self.create_publisher(Image, 'image_out', 10)
 
         # Set up server
         self.server = self.create_service(Trigger, 'trigger', self.trigger_cb)

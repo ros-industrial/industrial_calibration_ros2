@@ -9,6 +9,7 @@ import numpy as np
 import os
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import QoSProfile
 from sensor_msgs.msg import Image
 from std_srvs.srv import Trigger
 from tf2_ros import TransformListener, Buffer
@@ -58,10 +59,10 @@ class DataCollector(Node):
         # Set up image subscriber
         self.cvb = CvBridge()
         self.img_sub = self.create_subscription(
-            Image,
-            'image',
-            self.img_cb,
-            10
+            msg_type=msg_type = Image,
+            topic='image',
+            callback=self.img_cb,
+            qos_profile=QoSProfile(depth = 10)
         )
 
         # Set up servers

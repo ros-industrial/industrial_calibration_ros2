@@ -71,7 +71,11 @@ class DataCollector(Node):
         self.cvb = CvBridge()
         self.img_sub = Subscriber(self, Image, 'image')
         self.pc_sub = Subscriber(self, PointCloud2, 'cloud')
-        self.ts = ApproximateTimeSynchronizer([self.img_sub, self.pc_sub], 10, self.sync_time, allow_headerless=True)
+        self.ts = ApproximateTimeSynchronizer(
+            fs=[self.img_sub, self.pc_sub],
+            queue_size=10,
+            slop=self.sync_time,
+            allow_headerless=True)
         self.ts.registerCallback(self.sync_cb)
 
         # Set up servers

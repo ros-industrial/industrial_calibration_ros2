@@ -4,6 +4,7 @@ from cv_bridge import CvBridge
 import rclpy
 from rclpy.time import Time
 from rclpy.node import Node
+from rclpy.qos import QoSProfile
 from sensor_msgs.msg import Image
 from std_srvs.srv import Trigger
 
@@ -23,10 +24,10 @@ class ImageTrigger(Node):
         # Set up image subscriber
         self.cvb = CvBridge()
         self.img_sub = self.create_subscription(
-            Image,
-            'image',
-            self.img_cb,
-            10
+            msg_type=Image,
+            topic='image',
+            callback=self.img_cb,
+            qos_profile=QoSProfile(depth = 10)
         )
 
         self.img_pub = self.create_publisher(Image, 'image_out', 10)

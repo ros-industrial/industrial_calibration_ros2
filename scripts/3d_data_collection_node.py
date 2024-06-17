@@ -8,10 +8,12 @@ from message_filters import ApproximateTimeSynchronizer, Subscriber
 import numpy as np
 import os
 import open3d as o3d
-import rospy
+
+import rclpy
+from rclpy.node import Node
 from sensor_msgs.msg import Image, PointCloud2
 import sensor_msgs.point_cloud2 as pc2
-from std_srvs.srv import *
+from std_srvs.srv import Trigger
 from tf2_ros import TransformListener, Buffer
 import yaml
 
@@ -36,16 +38,22 @@ def save_pose(pose: TransformStamped,
 
 def save_point_cloud(point_cloud: o3d.geometry.PointCloud,
                      filename: str) -> None:
-    # Save the point cloud as a PCD file
     o3d.io.write_point_cloud(filename, point_cloud)
 
 
-class DataCollector:
+class DataCollector(Node):
     def __init__(self):
-        self.parent_path = rospy.get_param('~save_path')
-        self.base_frame = rospy.get_param('~base_frame')
-        self.tool_frame = rospy.get_param('~tool_frame')
-        self.sync_time = rospy.get_param('~sync_time', 1.0)
+        super().__init__('data_collector_node')
+
+        self.declare_parameter('save_path', '/tmp')
+        self.declare_parameter('base_frame', 'base_frame')
+        self.declare_parameter('tool_frame', 'tool_frame')
+        self.declare_parameter('sync_time', 1.0)
+
+        self.parent_path = self.get_parameter('save_path').get_parameter_value().string_value
+        self.base_frame = self.get_parameter('base_frame').get_parameter_value().string_value
+        self.tool_frame = self.get_parameter('tool_frame').get_parameter_value().string_value
+        self.sync_time = self.get_parameter('sync_time').get_parameter_value().double_value
 
         self.img_subdir = 'images'
         self.pose_subdir = 'poses'
@@ -57,25 +65,25 @@ class DataCollector:
 
         # Set up tf listener
         self.buffer = Buffer()
-        self.listener = TransformListener(self.buffer)
+        self.listener = TransformListener(self.buffer, self)
 
         # Set up image subscriber
         self.cvb = CvBridge()
-        self.img_sub = Subscriber('image', Image)
-        self.pc_sub = Subscriber('cloud', PointCloud2)
+        self.img_sub = Subscriber(self, Image, 'image')
+        self.pc_sub = Subscriber(self, PointCloud2, 'cloud')
         self.ts = ApproximateTimeSynchronizer([self.img_sub, self.pc_sub], 10, self.sync_time, allow_headerless=True)
         self.ts.registerCallback(self.sync_cb)
 
         # Set up servers
-        self.save_server = rospy.Service('save', Trigger, self.save_cb, 1)
+        self.save_server = self.create_service(Trigger, 'save', self.save_cb)
 
     def sync_cb(self,
                 img_msg: Image,
                 pc_msg: PointCloud2) -> None:
         try:
-            rospy.loginfo('Adding observation...')
+            self.get_logger().info('Adding observation...')
             # Collect pose
-            pose = self.buffer.lookup_transform(self.base_frame, self.tool_frame, img_msg.header.stamp, rospy.Duration(1.0))
+            pose = self.buffer.lookup_transform(self.base_frame, self.tool_frame, rclpy.time.Time.from_msg(img_msg.header.stamp))
 
             # Save most recent Image
             image = self.cvb.imgmsg_to_cv2(img_msg)
@@ -94,13 +102,14 @@ class DataCollector:
             self.images.append(image)
             self.point_clouds.append(point_cloud)
 
-            rospy.loginfo('Observation added')
+            self.get_logger().info('Observation added')
         except Exception as ex:
-            rospy.logerr(ex)
+            self.get_logger().error(str(ex))
 
-    def save_cb(self, _req: TriggerRequest) -> TriggerResponse:
-        rospy.loginfo("Save triggered...")
-        res = TriggerResponse()
+    def save_cb(self,
+                _req: Trigger.Request,
+                res: Trigger.Response) -> Trigger.Response:
+        self.get_logger().info("Save triggered...")
         try:
             # Make directories
             save_dir = os.path.join(self.parent_path, dt.datetime.now().strftime('%Y-%m-%d_%H:%M:%S'))
@@ -138,17 +147,18 @@ class DataCollector:
             res.message = f"Saved data due to: \'{self.parent_path}\'"
             res.success = True
         except Exception as ex:
-            res.message = f"Failed to save data: \'{ex}\'"
+            res.message = f"Failed to save data: '{ex}'"
             res.success = False
 
         return res
 
 
-def main():
-    rospy.init_node("data_collection_3d_node")
-    _dc = DataCollector()
-    rospy.loginfo('Started 3D data collection node...')
-    rospy.spin()
+def main(args=None):
+    rclpy.init(args=args)
+    node = DataCollector()
+    node.get_logger().info('Started 3D data collection node...')
+    rclpy.spin(node)
+    rclpy.shutdown()
 
 
 if __name__ == "__main__":

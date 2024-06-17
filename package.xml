@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>industrial_calibration_ros</name>
+  <name>industrial_calibration_ros2</name>
   <version>0.0.0</version>
-  <description>The industrial_calibration_ros package</description>
+  <description>The industrial_calibration_ros2 package</description>
 
   <maintainer email="ychen@swri.org">ychen</maintainer>
 
@@ -22,4 +22,7 @@
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>std_srvs</exec_depend>
   <exec_depend>message_filters</exec_depend>
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
 </package>

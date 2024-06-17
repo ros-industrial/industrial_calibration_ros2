@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>industrial_calibration_ros2</name>
+  <name>industrial_calibration_ros</name>
   <version>0.0.0</version>
-  <description>The industrial_calibration_ros2 package</description>
+  <description>The industrial_calibration_ros package</description>
 
   <maintainer email="ychen@swri.org">ychen</maintainer>
 

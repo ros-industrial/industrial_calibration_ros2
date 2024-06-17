@@ -3,25 +3,25 @@
   <arg name="base_frame" default="base_link"/>
   <arg name="tool_frame" default="tool0"/>
   <arg name="save_path" default="/tmp/calibration"/>
-  <arg name="config_file" default="$(find-pkg-share industrial_calibration_ros2)/config/target_detector_config.yaml"/>
+  <arg name="config_file" default="$(find-pkg-share industrial_calibration_ros)/config/target_detector_config.yaml"/>
   <arg name="sync_time" default="1.0"/>
   <arg name="image_topic" default="/camera/color/image_raw"/>
 
   <!-- Target detector node -->
-  <node name="target_detector_node" pkg="industrial_calibration_ros2" exec="industrial_calibration_ros2_target_detector" output="screen">
+  <node name="target_detector_node" pkg="industrial_calibration_ros" exec="industrial_calibration_ros2_target_detector" output="screen">
     <param name="config_file" value="$(var config_file)"/>
     <remap from="image" to="$(var image_topic)"/>
   </node>
 
   <!-- Image trigger node-->
-  <node name="image_trigger" pkg="industrial_calibration_ros2" exec="image_trigger.py">
+  <node name="image_trigger" pkg="industrial_calibration_ros" exec="image_trigger.py">
     <param name="sync_time" value="$(var sync_time)"/>
     <remap from="image" to="image_detected"/>
     <remap from="image_out" to="image_detected_trigger"/>
   </node>
 
   <!-- Data collector -->
-  <node name="data_collection_node" pkg="industrial_calibration_ros2" exec="data_collection_node.py" output="screen">
+  <node name="data_collection_node" pkg="industrial_calibration_ros" exec="data_collection_node.py" output="screen">
     <param name="base_frame" value="$(var base_frame)"/>
     <param name="tool_frame" value="$(var tool_frame)"/>
     <param name="save_path" value="$(var save_path)"/>

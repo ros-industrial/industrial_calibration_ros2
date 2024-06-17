@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(industrial_calibration_ros2)
+project(industrial_calibration_ros)
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)

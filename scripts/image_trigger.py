@@ -43,8 +43,16 @@ class ImageTrigger(Node):
             if self.last_frame is None:
                 raise RuntimeError('No image acquired yet')
             else:
-                diff = self.get_clock().now().seconds_nanoseconds()[0] - self.last_frame.header.stamp.sec
-                if diff > self.sync_time:
+                # Convert header msg to rclpy Time object
+                lf_time = Time().from_msg(self.last_frame.header.stamp)
+
+                # Find difference between now and last frame time (Makes duration object which holds ns only)
+                diff = self.get_clock().now() - lf_time
+
+                # Convert nanoseconds to seconds
+                diff_sec = float(diff.nanoseconds) / 1e9
+
+                if diff_sec > self.sync_time:
                     raise RuntimeError(f'Last acquired image is {diff - self.sync_time:0.4f} seconds too old')
 
                 self.img_pub.publish(self.last_frame)

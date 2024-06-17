@@ -7,7 +7,7 @@
   <arg name="sync_time" default="1.0"/>
 
   <!-- Target detector node -->
-  <node name="target_detector_node" pkg="industrial_calibration_ros" exec="industrial_calibration_ros2_target_detector" output="screen">
+  <node name="target_detector_node" pkg="industrial_calibration_ros" exec="industrial_calibration_ros_target_detector" output="screen">
     <param name="config_file" value="$(var config_file)"/>
   </node>
 

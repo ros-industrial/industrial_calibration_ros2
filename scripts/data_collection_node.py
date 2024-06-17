@@ -41,10 +41,6 @@ class DataCollector(Node):
         self.declare_parameter('base_frame', 'base_frame')
         self.declare_parameter('tool_frame', 'tool_frame')
 
-        self.parent_path = self.get_parameter('save_path').get_parameter_value().string_value
-        self.base_frame = self.get_parameter('base_frame').get_parameter_value().string_value
-        self.tool_frame = self.get_parameter('tool_frame').get_parameter_value().string_value
-
         self.img_subdir = 'images'
         self.pose_subdir = 'poses'
 
@@ -83,7 +79,9 @@ class DataCollector(Node):
                 image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
 
             # Lookup the pose
-            pose = self.buffer.lookup_transform(self.base_frame, self.tool_frame, rclpy.time.Time.from_msg(img_msg.header.stamp), rclpy.duration.Duration(seconds=1))
+            base_frame = self.get_parameter('base_frame').get_parameter_value().string_value
+            tool_frame = self.get_parameter('tool_frame').get_parameter_value().string_value
+            pose = self.buffer.lookup_transform(base_frame, tool_frame, rclpy.time.Time.from_msg(img_msg.header.stamp), rclpy.duration.Duration(seconds=1))
 
             # Add to the internal buffer
             self.images.append(image)
@@ -100,7 +98,8 @@ class DataCollector(Node):
         self.get_logger().info("Save triggered...")
         try:
             # Make directories
-            save_dir = os.path.join(self.parent_path, dt.datetime.now().strftime('%Y-%m-%d_%H:%M:%S'))
+            parent_path = self.get_parameter('save_path').get_parameter_value().string_value
+            save_dir = os.path.join(parent_path, dt.datetime.now().strftime('%Y-%m-%d_%H:%M:%S'))
             image_path = os.path.join(save_dir, self.img_subdir)
             os.makedirs(image_path, exist_ok=True)
             pose_path = os.path.join(save_dir, self.pose_subdir)
@@ -127,7 +126,7 @@ class DataCollector(Node):
             with open(os.path.join(save_dir, 'cal_data.yaml'), 'w') as f:
                 yaml.dump({'data': cal_data}, f)
 
-            res.message = f"Saved data to: '{self.parent_path}'"
+            res.message = f"Saved data to: '{parent_path}'"
             res.success = True
         except Exception as ex:
             res.message = f"Failed to save data: '{ex}'"

@@ -22,16 +22,15 @@ target_link_libraries(
   yaml-cpp
   boost_plugin_loader::boost_plugin_loader
   industrial_calibration::industrial_calibration_core
-  industrial_calibration::industrial_calibration_target_finders_opencv
-)
-ament_target_dependencies(${PROJECT_NAME}_target_detector
+  industrial_calibration::industrial_calibration_target_finders_opencv)
+ament_target_dependencies(
+  ${PROJECT_NAME}_target_detector
   rclcpp
   image_transport
   sensor_msgs
   cv_bridge
   std_srvs
-  cv_bridge
-)
+  cv_bridge)
 
 # PnP Validation node
 add_executable(${PROJECT_NAME}_pnp_validation_node src/pnp_validation_node.cpp)
@@ -40,37 +39,24 @@ target_link_libraries(
   yaml-cpp
   boost_plugin_loader::boost_plugin_loader
   industrial_calibration::industrial_calibration_optimizations
-  industrial_calibration::industrial_calibration_target_finders_opencv
-)
-ament_target_dependencies(${PROJECT_NAME}_pnp_validation_node
+  industrial_calibration::industrial_calibration_target_finders_opencv)
+ament_target_dependencies(
+  ${PROJECT_NAME}_pnp_validation_node
   rclcpp
   image_transport
   sensor_msgs
   cv_bridge
   std_srvs
-  cv_bridge
-)
+  cv_bridge)
 
 # ######################################################################################################################
 # Install ##
 # ######################################################################################################################
-install(TARGETS
-${PROJECT_NAME}_target_detector
-${PROJECT_NAME}_pnp_validation_node
-  DESTINATION lib/${PROJECT_NAME}
-)
+install(TARGETS ${PROJECT_NAME}_target_detector ${PROJECT_NAME}_pnp_validation_node DESTINATION lib/${PROJECT_NAME})
 
-install(
-  DIRECTORY launch
-            config
-  DESTINATION share/${PROJECT_NAME}/)
+install(DIRECTORY launch config DESTINATION share/${PROJECT_NAME}/)
 
-
-install(PROGRAMS
-  scripts/data_collection_node.py
-  scripts/3d_data_collection_node.py
-  scripts/image_trigger.py
-  DESTINATION lib/${PROJECT_NAME}
-)
+install(PROGRAMS scripts/data_collection_node.py scripts/3d_data_collection_node.py scripts/image_trigger.py
+        DESTINATION lib/${PROJECT_NAME})
 
 ament_package()

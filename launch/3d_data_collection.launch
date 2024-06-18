@@ -7,16 +7,16 @@
   <arg name="sync_time" default="1.0"/>
 
   <!-- Target detector node -->
-  <node name="target_detector_node" pkg="industrial_calibration_ros" type="industrial_calibration_ros_target_detector" output="screen">
-    <param name="config_file" value="$(arg config_file)"/>
+  <node name="target_detector_node" pkg="industrial_calibration_ros" exec="industrial_calibration_ros_target_detector" output="screen">
+    <param name="config_file" value="$(var config_file)"/>
   </node>
 
   <!-- Data collector -->
-  <remap from="image" to="image_detected"/>
-  <node name="data_collection_3d_node" pkg="industrial_calibration_ros" type="3d_data_collection_node.py" output="screen">
-    <param name="base_frame" value="$(arg base_frame)"/>
-    <param name="tool_frame" value="$(arg tool_frame)"/>
-    <param name="save_path" value="$(arg save_path)"/>
-    <param name="sync_time" value="$(arg sync_time)"/>
+  <node name="data_collection_3d_node" pkg="industrial_calibration_ros" exec="3d_data_collection_node.py" output="screen">
+    <param name="base_frame" value="$(var base_frame)"/>
+    <param name="tool_frame" value="$(var tool_frame)"/>
+    <param name="save_path" value="$(var save_path)"/>
+    <param name="sync_time" value="$(var sync_time)"/>
+    <remap from="image" to="image_detected"/>
   </node>
 </launch>

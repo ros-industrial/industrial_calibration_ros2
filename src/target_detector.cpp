@@ -2,46 +2,49 @@
 
 #include <boost_plugin_loader/plugin_loader.hpp>
 #include <cv_bridge/cv_bridge.h>
-#include <image_transport/image_transport.h>
+#include <image_transport/image_transport.hpp>
 #include <industrial_calibration/core/serialization.h>
 #include <industrial_calibration/target_finders/opencv/target_finder.h>
-#include <opencv2/opencv.hpp>
-#include <ros/ros.h>
-#include <sensor_msgs/Image.h>
+#include <rclcpp/rclcpp.hpp>
+#include <sensor_msgs/msg/image.hpp>
 #include <yaml-cpp/yaml.h>
 
 template <typename T>
-T getParameter(ros::NodeHandle& nh, const std::string& key)
+T getParameter(rclcpp::Node::SharedPtr node, const std::string& key)
 {
   T val;
-  if (!nh.getParam(key, val)) throw std::runtime_error("Failed to get '" + key + "' parameter");
+  if (!node->get_parameter(key, val))
+    throw std::runtime_error("Failed to get '" + key + "' parameter");
   return val;
 }
 
 class TargetDetector
 {
 public:
-  TargetDetector() : it_(ros::NodeHandle())
+  TargetDetector(std::shared_ptr<rclcpp::Node> node)
+    : node_(node)
+    , it_(node_)
   {
     // Configure the plugin loader
     loader_.search_libraries.insert(INDUSTRIAL_CALIBRATION_PLUGIN_LIBRARIES);
     loader_.search_libraries_env = INDUSTRIAL_CALIBRATION_SEARCH_LIBRARIES_ENV;
 
     // Load the target finder
-    ros::NodeHandle pnh("~");
-    YAML::Node config = YAML::LoadFile(getParameter<std::string>(pnh, "config_file"));
+    node_->declare_parameter("config_file", "");
+    YAML::Node config = YAML::LoadFile(getParameter<std::string>(node_, "config_file"));
     YAML::Node target_finder_config = getMember<YAML::Node>(config, "target_finder");
     factory_ = loader_.createInstance<industrial_calibration::TargetFinderFactoryOpenCV>(
         getMember<std::string>(target_finder_config, "type"));
     target_finder_ = factory_->create(target_finder_config);
 
     // Setup subscriber and publishers
-    image_sub_ = it_.subscribe("image", 1, &TargetDetector::imageCb, this);
+    image_sub_ = it_.subscribe("image", 1, std::bind(&TargetDetector::imageCb, this, std::placeholders::_1));
+
     detected_image_pub_ = it_.advertise("image_detected", 1);
     annotated_image_pub_ = it_.advertise("image_annotated", 1);
   }
 
-  void imageCb(const sensor_msgs::ImageConstPtr& msg)
+  void imageCb(const sensor_msgs::msg::Image::ConstPtr & msg)
   {
     try
     {
@@ -59,11 +62,13 @@ public:
     }
     catch (const std::runtime_error& ex)
     {
-      ROS_ERROR_STREAM(ex.what());
+      RCLCPP_ERROR(node_->get_logger(), "%s", ex.what());
     }
   }
 
 private:
+  std::shared_ptr<rclcpp::Node> node_;
+
   boost_plugin_loader::PluginLoader loader_;
   industrial_calibration::TargetFinderFactoryOpenCV::Ptr factory_;
   industrial_calibration::TargetFinderOpenCV::ConstPtr target_finder_;
@@ -76,11 +81,11 @@ private:
 
 int main(int argc, char** argv)
 {
-  ros::init(argc, argv, "target_detector_node");
-  TargetDetector targetDetectorNode;
-  ROS_INFO_STREAM("Started target detector node...");
-  ros::spin();
-
-  ros::shutdown();
+  rclcpp::init(argc, argv);
+  auto node = std::make_shared<rclcpp::Node>("target_detector_node");
+  auto target_detector = std::make_shared<TargetDetector>(node);
+  RCLCPP_INFO(node->get_logger(), "Started target detector node...");
+  rclcpp::spin(node);
+  rclcpp::shutdown();
   return 0;
 }

@@ -59,10 +59,10 @@ class DataCollector(Node):
         # Set up image subscriber
         self.cvb = CvBridge()
         self.img_sub = self.create_subscription(
-            msg_type=msg_type = Image,
+            msg_type=Image,
             topic='image',
             callback=self.img_cb,
-            qos_profile=QoSProfile(depth = 10)
+            qos_profile=QoSProfile(depth=10)
         )
 
         # Set up servers

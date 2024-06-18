@@ -15,6 +15,7 @@
   <depend>cv_bridge</depend>
   <depend>image_transport</depend>
   <depend>sensor_msgs</depend>
+  <depend>sensor_msgs_py</depend>
   <depend>yaml-cpp</depend>
   <depend>boost_plugin_loader</depend>
   <depend>industrial_calibration</depend>

@@ -41,7 +41,7 @@ public:
     annotated_image_pub_ = it_.advertise("image_annotated", 1);
   }
 
-  void imageCb(const sensor_msgs::msg::Image::ConstPtr& msg)
+  void imageCb(const sensor_msgs::msg::Image::ConstSharedPtr& msg)
   {
     try
     {

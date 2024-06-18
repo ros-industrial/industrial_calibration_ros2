@@ -57,7 +57,7 @@ public:
     pnp_.camera_to_target_guess = getMember<Eigen::Isometry3d>(config, "camera_to_target");
   }
 
-  void imageCb(const sensor_msgs::msg::Image::ConstPtr& msg)
+  void imageCb(const sensor_msgs::msg::Image::ConstSharedPtr& msg)
   {
     last_image_ = std::make_shared<sensor_msgs::msg::Image>(*msg);
   }

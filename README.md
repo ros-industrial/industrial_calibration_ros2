@@ -1,5 +1,5 @@
 # industrial_calibration_ros
-ROS1 utilities for the [`industrial_calibration`](https://github.com/ros-industrial/industrial_calibration) repository
+ROS2 utilities for the [`industrial_calibration`](https://github.com/ros-industrial/industrial_calibration) repository
 
 ## Architecture
 ![Architecture](docs/architecture.png)
@@ -39,10 +39,10 @@ This node is intended to act as a software trigger for cameras that publish imag
 cd <workspace>
 vcs import src < src/industrial_calibration_ros/dependencies.repos
 rosdep install --from-paths src -iry
-<colcon/catkin> build
+colcon build
 ```
 
 ## Run
 ```commandLine
-roslaunch industrial_calibration_ros data_collection.launch
+ros2 launch industrial_calibration_ros data_collection.launch
 ```

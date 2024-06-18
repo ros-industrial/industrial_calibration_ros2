@@ -17,8 +17,7 @@ template <typename T>
 T getParameter(rclcpp::Node::SharedPtr node, const std::string& key)
 {
   T val;
-  if (!node->get_parameter(key, val))
-    throw std::runtime_error("Failed to get '" + key + "' parameter");
+  if (!node->get_parameter(key, val)) throw std::runtime_error("Failed to get '" + key + "' parameter");
   return val;
 }
 
@@ -30,8 +29,10 @@ public:
     , it_(node_)
     , image_sub_(it_.subscribe("image", 1, std::bind(&PnPValidator::imageCb, this, std::placeholders::_1)))
     , last_image_(nullptr)
-    , validate_server_(node_->create_service<std_srvs::srv::Trigger>("validate_pnp", std::bind(&PnPValidator::validatePnP, this, std::placeholders::_1, std::placeholders::_2)))
-    , compute_server_(node_->create_service<std_srvs::srv::Trigger>("compute_pnp", std::bind(&PnPValidator::computePnP, this, std::placeholders::_1, std::placeholders::_2)))
+    , validate_server_(node_->create_service<std_srvs::srv::Trigger>(
+          "validate_pnp", std::bind(&PnPValidator::validatePnP, this, std::placeholders::_1, std::placeholders::_2)))
+    , compute_server_(node_->create_service<std_srvs::srv::Trigger>(
+          "compute_pnp", std::bind(&PnPValidator::computePnP, this, std::placeholders::_1, std::placeholders::_2)))
   {
     // Configure the plugin loader
     loader_.search_libraries.insert(INDUSTRIAL_CALIBRATION_PLUGIN_LIBRARIES);
@@ -56,7 +57,10 @@ public:
     pnp_.camera_to_target_guess = getMember<Eigen::Isometry3d>(config, "camera_to_target");
   }
 
-  void imageCb(const sensor_msgs::msg::Image::ConstPtr & msg) { last_image_ = std::make_shared<sensor_msgs::msg::Image>(*msg); }
+  void imageCb(const sensor_msgs::msg::Image::ConstSharedPtr& msg)
+  {
+    last_image_ = std::make_shared<sensor_msgs::msg::Image>(*msg);
+  }
 
   void checkImage()
   {
@@ -73,7 +77,8 @@ public:
     }
   }
 
-  bool computePnP(const std::shared_ptr<std_srvs::srv::Trigger::Request> req, std::shared_ptr<std_srvs::srv::Trigger::Response> res)
+  bool computePnP(const std::shared_ptr<std_srvs::srv::Trigger::Request> req,
+                  std::shared_ptr<std_srvs::srv::Trigger::Response> res)
   {
     try
     {
@@ -110,7 +115,8 @@ public:
     return true;
   }
 
-  bool validatePnP(const std::shared_ptr<std_srvs::srv::Trigger::Request> req, std::shared_ptr<std_srvs::srv::Trigger::Response> res)
+  bool validatePnP(const std::shared_ptr<std_srvs::srv::Trigger::Request> req,
+                   std::shared_ptr<std_srvs::srv::Trigger::Response> res)
   {
     try
     {

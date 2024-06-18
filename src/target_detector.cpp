@@ -13,17 +13,14 @@ template <typename T>
 T getParameter(rclcpp::Node::SharedPtr node, const std::string& key)
 {
   T val;
-  if (!node->get_parameter(key, val))
-    throw std::runtime_error("Failed to get '" + key + "' parameter");
+  if (!node->get_parameter(key, val)) throw std::runtime_error("Failed to get '" + key + "' parameter");
   return val;
 }
 
 class TargetDetector
 {
 public:
-  TargetDetector(std::shared_ptr<rclcpp::Node> node)
-    : node_(node)
-    , it_(node_)
+  TargetDetector(std::shared_ptr<rclcpp::Node> node) : node_(node), it_(node_)
   {
     // Configure the plugin loader
     loader_.search_libraries.insert(INDUSTRIAL_CALIBRATION_PLUGIN_LIBRARIES);
@@ -44,7 +41,7 @@ public:
     annotated_image_pub_ = it_.advertise("image_annotated", 1);
   }
 
-  void imageCb(const sensor_msgs::msg::Image::ConstPtr & msg)
+  void imageCb(const sensor_msgs::msg::Image::ConstSharedPtr& msg)
   {
     try
     {

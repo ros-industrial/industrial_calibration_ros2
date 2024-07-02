@@ -55,7 +55,7 @@ class ImageTrigger(Node):
                 diff_sec = float(diff.nanoseconds) / 1e9
 
                 if diff_sec > self.sync_time:
-                    raise RuntimeError(f'Last acquired image is {diff - self.sync_time:0.4f} seconds too old')
+                    raise RuntimeError(f'Last acquired image is {diff_sec - self.sync_time:0.4f} seconds too old')
 
                 self.img_pub.publish(self.last_frame)
 

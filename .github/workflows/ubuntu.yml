@@ -31,10 +31,11 @@ jobs:
         with:
           path: target_ws/src
       - name: Build
-        uses: tesseract-robotics/colcon-action@v8
+        uses: tesseract-robotics/colcon-action@v9
         with:
           before-script: source /opt/ros/${{ matrix.distro }}/setup.bash
           ccache-enabled: false
+          add-ros-ppa: false
           rosdep-enabled: true
           vcs-file: dependencies.repos
           target-path: target_ws/src

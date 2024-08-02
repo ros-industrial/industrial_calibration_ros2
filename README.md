@@ -44,5 +44,5 @@ colcon build
 
 ## Run
 ```commandLine
-ros2 launch industrial_calibration_ros data_collection.launch
+ros2 launch industrial_calibration_ros data_collection.launch.xml
 ```

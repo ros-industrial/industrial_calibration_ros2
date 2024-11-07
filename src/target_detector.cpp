@@ -59,7 +59,7 @@ public:
     }
     catch (const std::runtime_error& ex)
     {
-      RCLCPP_ERROR(node_->get_logger(), "%s", ex.what());
+      RCLCPP_ERROR_THROTTLE(node_->get_logger(), *node_->get_clock(), 2000, "%s", ex.what());
     }
   }
 

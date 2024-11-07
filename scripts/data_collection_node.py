@@ -128,7 +128,7 @@ class DataCollector(Node):
             with open(os.path.join(save_dir, 'cal_data.yaml'), 'w') as f:
                 yaml.dump({'data': cal_data}, f)
 
-            res.message = f"Saved data to: '{self.parent_path}'"
+            res.message = save_dir
             res.success = True
         except Exception as ex:
             res.message = f"Failed to save data: '{ex}'"

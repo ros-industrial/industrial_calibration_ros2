@@ -1,0 +1,3 @@
+#!/bin/bash
+source /opt/industrial_calibration_ros2/install/setup.bash
+./opt/industrial_calibration_ros2/install/industrial_calibration/bin/industrial_calibration_camera_intrinsic_calibration_app

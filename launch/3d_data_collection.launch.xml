@@ -3,7 +3,7 @@
   <arg name="base_frame" default="base_link"/>
   <arg name="tool_frame" default="tool0"/>
   <arg name="save_path" default="/tmp/calibration"/>
-  <arg name="config_file" default="$(find industrial_calibration_ros)/config/target_detector_config.yaml"/>
+  <arg name="config_file" default="$(find-pkg-share industrial_calibration_ros)/config/target_detector_config.yaml"/>
   <arg name="sync_time" default="1.0"/>
 
   <!-- Target detector node -->

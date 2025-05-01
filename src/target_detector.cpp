@@ -1,7 +1,7 @@
 #include "utils.h"
 
 #include <boost_plugin_loader/plugin_loader.hpp>
-#include <cv_bridge/cv_bridge.h>
+#include <cv_bridge/cv_bridge.hpp>
 #include <image_transport/image_transport.hpp>
 #include <industrial_calibration/core/serialization.h>
 #include <industrial_calibration/target_finders/opencv/target_finder.h>

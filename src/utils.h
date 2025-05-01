@@ -2,7 +2,7 @@
 
 #include <opencv2/core.hpp>
 #include <sensor_msgs/image_encodings.hpp>
-#include <cv_bridge/cv_bridge.h>
+#include <cv_bridge/cv_bridge.hpp>
 
 cv_bridge::CvImagePtr fromROS(sensor_msgs::msg::Image::ConstSharedPtr msg)
 {

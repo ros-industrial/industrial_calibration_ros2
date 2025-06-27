@@ -20,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        distro: [foxy, humble]
+        distro: [foxy, humble, jazzy]
     env:
       REGISTRY: ghcr.io
       IMAGE_NAME: ${{ github.repository }}

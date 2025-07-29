@@ -1,11 +1,21 @@
 <?xml version="1.0"?>
 <launch>
-  <arg name="base_frame" default="base_link"/>
-  <arg name="tool_frame" default="tool0"/>
+  <arg name="target_mount_frame" default="base_link"/>
+  <arg name="target_frame" default="cal_target_frame"/>
+  <arg name="camera_mount_frame" default="tool0"/>
+  <arg name="camera_frame" default="camera_color_optical_frame"/>
   <arg name="save_path" default="/tmp/calibration"/>
   <arg name="config_file" default="$(find-pkg-share industrial_calibration_ros)/config/target_detector_config.yaml"/>
   <arg name="sync_time" default="1.0"/>
   <arg name="image_topic" default="/camera/color/image_raw"/>
+  <arg name="static_camera" default="false"/>
+
+  <!-- Static camera case -->
+  <let name="base_frame" value="$(var camera_mount_frame)" if="$(var static_camera)"/>
+  <let name="tool_frame" value="$(var target_mount_frame)" if="$(var static_camera)"/>
+  <!-- Moving camera case-->
+  <let name="base_frame" value="$(var target_mount_frame)" unless="$(var static_camera)"/>
+  <let name="tool_frame" value="$(var camera_mount_frame)" unless="$(var static_camera)"/>
 
   <!-- Target detector node -->
   <node name="target_detector_node" pkg="industrial_calibration_ros" exec="industrial_calibration_ros_target_detector" output="screen">

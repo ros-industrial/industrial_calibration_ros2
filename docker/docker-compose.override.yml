@@ -1,12 +1,14 @@
 # services:
-  # industrial_calibration:
-    # environment:
-      # IC_BASE_FRAME: base_link
-      # IC_TOOL_FRAME: tool0
-      # IC_SAVE_PATH: /tmp/calibration
-      # IC_CONFIG_FILE: /opt/industrial_calibration_ros2/industrial_calibration_ros/share/industrial_calibration_ros/config/target_detector_config.yaml
-      # IC_SYNC_TIME: '1.0'
-      # IC_IMAGE_TOPIC: /camera/color/image_raw
-    # volumes:
-      # - /tmp/calibration
-    # entrypoint: ./3d_data_collection.sh
+#   industrial_calibration:
+#     environment:
+#       IC_CAMERA_MOUNT_FRAME: tool0
+#       IC_CAMERA_FRAME: camera
+#       IC_TARGET_MOUNT_FRAME: base_link
+#       IC_TARGET_FRAME: target
+#       IC_SAVE_PATH: /tmp/calibration
+#       IC_CONFIG_FILE: /opt/industrial_calibration_ros2/industrial_calibration_ros/share/industrial_calibration_ros/config/target_detector_config.yaml
+#       IC_SYNC_TIME: '1.0'
+#       IC_IMAGE_TOPIC: /camera/color/image_raw
+#     volumes:
+#       - /tmp/calibration
+#     entrypoint: ./3d_data_collection.sh

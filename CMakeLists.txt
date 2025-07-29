@@ -10,7 +10,15 @@ find_package(yaml-cpp REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(boost_plugin_loader REQUIRED)
 find_package(cv_bridge REQUIRED)
-find_package(industrial_calibration REQUIRED COMPONENTS core optimizations target_finders_opencv)
+find_package(
+  industrial_calibration REQUIRED
+  COMPONENTS core
+             optimizations
+             target_finders_opencv
+             gui)
+find_package(rviz_common REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(tf2_eigen REQUIRED)
 
 # ######################################################################################################################
 # Build ##
@@ -49,9 +57,25 @@ ament_target_dependencies(
   std_srvs
   cv_bridge)
 
+# Extrinsic Hand Eye Calibration Rviz panel
+add_library(${PROJECT_NAME}_extrinsic_hand_eye_calibration_panel SHARED src/extrinsic_hand_eye_calibration_panel.cpp)
+target_link_libraries(${PROJECT_NAME}_extrinsic_hand_eye_calibration_panel
+                      industrial_calibration::industrial_calibration_gui)
+ament_target_dependencies(
+  ${PROJECT_NAME}_extrinsic_hand_eye_calibration_panel
+  rclcpp
+  rviz_common
+  std_srvs
+  tf2_ros
+  tf2_eigen)
+
 # ######################################################################################################################
 # Install ##
 # ######################################################################################################################
+install(TARGETS ${PROJECT_NAME}_extrinsic_hand_eye_calibration_panel EXPORT ${PROJECT_NAME}-targets DESTINATION lib)
+ament_export_targets(${PROJECT_NAME}-targets HAS_LIBRARY_TARGET)
+pluginlib_export_plugin_description_file(rviz_common plugin_description.xml)
+
 install(TARGETS ${PROJECT_NAME}_target_detector ${PROJECT_NAME}_pnp_validation_node DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY launch config DESTINATION share/${PROJECT_NAME}/)
@@ -59,4 +83,10 @@ install(DIRECTORY launch config DESTINATION share/${PROJECT_NAME}/)
 install(PROGRAMS scripts/data_collection_node.py scripts/3d_data_collection_node.py scripts/image_trigger.py
         DESTINATION lib/${PROJECT_NAME})
 
+ament_export_dependencies(
+  rclcpp
+  rviz_common
+  std_srvs
+  tf2_ros
+  tf2_eigen)
 ament_package()

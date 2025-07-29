@@ -9,6 +9,7 @@
   <arg name="sync_time" default="1.0"/>
   <arg name="image_topic" default="/camera/color/image_raw"/>
   <arg name="static_camera" default="false"/>
+  <arg name="headless" default="false"/>
 
   <!-- Static camera case -->
   <let name="base_frame" value="$(var camera_mount_frame)" if="$(var static_camera)"/>
@@ -37,4 +38,14 @@
     <param name="save_path" value="$(var save_path)"/>
     <remap from="image" to="image_detected_trigger"/>
   </node>
+
+  <!-- Rviz -->
+  <group unless="$(var headless)">
+    <node pkg="rviz2" exec="rviz2" args="-d $(find-pkg-share industrial_calibration_ros)/config/extrinsic_hand_eye_calibration.rviz">
+      <param name="camera_mount_frame" value="$(var camera_mount_frame)"/>
+      <param name="camera_frame" value="$(var camera_frame)"/>
+      <param name="target_mount_frame" value="$(var target_mount_frame)"/>
+      <param name="target_frame" value="$(var target_frame)"/>
+    </node>
+  </group>
 </launch>

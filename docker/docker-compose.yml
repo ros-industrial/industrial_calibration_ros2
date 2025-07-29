@@ -16,6 +16,7 @@ services:
     stdin_open: true
     tty: true
     network_mode: host
+    ipc: host
     privileged: false
     user: ${CURRENT_UID}  # CURRENT_UID=$(id -u):$(id -g)
     volumes:

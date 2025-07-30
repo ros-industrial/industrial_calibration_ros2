@@ -2,7 +2,7 @@ repositories:
   industrial_calibration:
     type: git
     url: https://github.com/ros-industrial/industrial_calibration.git
-    version: 1.0.5
+    version: 1.1.0
   ros_industrial_cmake_boilerplate:
     type: git
     url: https://github.com/ros-industrial/ros_industrial_cmake_boilerplate.git

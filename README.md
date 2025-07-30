@@ -34,6 +34,13 @@ If the target is identified, it:
 ROS node that subscribes to an image topic (`sensor_msgs/Image`) and provides a service (`std_srvs/Trigger`) for republishing that image on command.
 This node is intended to act as a software trigger for cameras that publish images continuously or at a frequency faster than the desired calibration observation collection.
 
+## Rviz Integration
+
+![Extrinsic Hand Eye Calibration Panel](docs/rviz_panel_extrinsic_hand_eye_calibration.png)
+
+This repository provides an Rviz panel for performing data collection for an extrinsic hand eye 2D camera calibration (using the services provided by the [data collection pipeline](launch/data_collection.launch.xml))
+and calibration using the extrinsic hand eye calibration widget from `industrial_calibration`.
+
 ## Build
 ```commandLine
 cd <workspace>

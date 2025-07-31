@@ -12,7 +12,7 @@ services:
       ROS_LOCALHOST_ONLY: $ROS_LOCALHOST_ONLY
       ROS_DOMAIN_ID: $ROS_DOMAIN_ID
     container_name: industrial_calibration_ros2
-    image: ghcr.io/ros-industrial/industrial_calibration_ros2:humble
+    image: ghcr.io/ros-industrial/industrial_calibration_ros2:humble-master
     stdin_open: true
     tty: true
     network_mode: host
@@ -24,3 +24,4 @@ services:
       - /etc/hosts:/etc/hosts
       - /etc/passwd:/etc/passwd:ro
       - /etc/group:/etc/group:ro
+      - /etc/shadow:/etc/shadow:ro

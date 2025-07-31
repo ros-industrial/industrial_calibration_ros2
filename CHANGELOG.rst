@@ -2,8 +2,8 @@
 Changelog for package industrial_calibration_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.1.0 (2025-07-31)
+------------------
 
 * Added Rviz panel for performing 2D extrinsic hand eye calibration data collection and calibration
 * Fixed bug in image conversion in data collection scripts

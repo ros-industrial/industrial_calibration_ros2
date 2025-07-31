@@ -90,10 +90,15 @@ class DataCollector(Node):
             pose = self.buffer.lookup_transform(self.base_frame, self.tool_frame, rclpy.time.Time.from_msg(img_msg.header.stamp))
 
             # Save most recent Image
-            image = self.cvb.imgmsg_to_cv2(img_msg)
+            try:
+              image = self.cvb.imgmsg_to_cv2(img_msg, desired_encoding='bgr8')
+            except Exception as e:
+              self.get_logger().warn(f'Failed to convert image to bgr8: {e}. Using passthrough encoding instead.')
+              image = self.cvb.imgmsg_to_cv2(img_msg)
+
             if image.dtype != np.dtype(np.uint8):
                 image = cv2.normalize(image, cv2.NORM_MINMAX, 0, 255).astype(np.uint8)
-            if len(image.shape) != 3:
+            if len(image.shape) == 1:
                 image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
 
             # Convert PointCloud2 message to Open3D PointCloud

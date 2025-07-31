@@ -1,0 +1,7 @@
+<library path="industrial_calibration_ros_extrinsic_hand_eye_calibration_panel">
+  <class name="industrial_calibration/ExtrinsicHandEyeCalibration" type="industrial_calibration_ros::ExtrinsicHandEyeCalibrationPanel" base_class_type="rviz_common::Panel">
+    <description>
+      Panel for performing hand eye calibration
+    </description>
+  </class>
+</library>

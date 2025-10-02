@@ -2,6 +2,11 @@
 Changelog for package industrial_calibration_ros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Updated to version 1.2.0 of industrial_calibration
+* Updated image name in docker compose file and added mount of `/etc/shadow` directory
+
 1.1.0 (2025-07-31)
 ------------------
 
